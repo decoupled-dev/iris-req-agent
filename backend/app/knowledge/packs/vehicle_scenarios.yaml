@@ -1,0 +1,462 @@
+# Companion behaviour in vehicle context, as GIVEN / WHEN / THEN scenarios.
+# Reviewed source: docs/12-vehicle-context.md. Signals and triggers: vehicle_signals.yaml.
+# One trigger per scenario; branches are separate scenarios.
+pack: vehicle_scenarios
+version: "2026-10-25"
+source: "Knowledge pack: Vehicle context scenarios"
+entries:
+  # ---------------- Climate ----------------
+  - key: SCN-CLIM-01
+    title: Cold occupant, known seat
+    finding: Occupants describe discomfort ("I'm freezing") rather than issuing setpoints; the companion should map it to the speaker's zone.
+    proposal:
+      category: SYS-COG
+      title: Warm the speaker's zone on cold discomfort
+      statement: The voice assistant shall respond to a cold-discomfort utterance by raising the climate setpoint of the speaker's zone by 2 °C and stating the change.
+      rationale: Natural expressions of discomfort are the most common climate request (VOC-07); acting in the speaker's zone avoids overriding others.
+      verification_method: Test
+      acceptance_criteria: In the four-seat suite, "I'm freezing" from each seat raises only that zone's setpoint by 2 °C and the spoken response names the new value.
+      cognitive_capability: [COG-01, COG-02, COG-04]
+      scenario:
+        given:
+          - {signal: ignition_state, op: "==", value: "ON"}
+          - {signal: speaker_seat, op: "!=", value: unknown}
+          - {signal: speaker_confidence, op: ">=", value: 0.8}
+          - {signal: cabin_temp, op: "<", value: "@setpoint_driver", note: compared with the speaker's zone setpoint}
+        when: {trigger: UTTERANCE, intent: thermal_discomfort.cold, example: "I'm freezing"}
+        then:
+          - {type: ACT, target: climate_setpoint, zone: speaker, value: "+2 °C", say: "Warming your side up to {new_setpoint} degrees."}
+  - key: SCN-CLIM-02
+    title: Cold occupant, seat heating available
+    finding: When it is cold outside, seat heating warms faster than air; owners expect the assistant to offer it.
+    proposal:
+      category: SYS-COG
+      title: Offer seat heating when cold outside
+      statement: The voice assistant shall offer seat heating for the speaker's seat when a cold-discomfort utterance occurs and the outside temperature is below 10 °C.
+      rationale: Seat heating gives faster perceived comfort than raising air temperature in cold weather.
+      verification_method: Test
+      acceptance_criteria: With outside temperature 5 °C, "I'm cold" from the passenger seat produces an offer for passenger seat heating; "yes" sets it to level 2.
+      cognitive_capability: [COG-01, COG-02, COG-12]
+      scenario:
+        given:
+          - {signal: ignition_state, op: "==", value: "ON"}
+          - {signal: outside_temp, op: "<", value: 10}
+          - {signal: speaker_seat, op: in, value: [driver, passenger]}
+          - {signal: seat_climate_driver, op: "<=", value: 0, note: speaker's seat heating currently off}
+        when: {trigger: UTTERANCE, intent: thermal_discomfort.cold, example: "It's cold in here"}
+        then:
+          - {type: ACT, target: climate_setpoint, zone: speaker, value: "+2 °C", say: "I've turned your side up two degrees."}
+          - {type: SUGGEST, target: seat_climate, zone: speaker, value: "+66 %", say: "Want me to switch on your seat heating as well?"}
+  - key: SCN-CLIM-03
+    title: Discomfort with unknown speaker
+    finding: Misattributed seat commands are a passenger complaint; the assistant should ask rather than guess.
+    proposal:
+      category: SYS-COG
+      title: Ask which seat when the speaker is unclear
+      statement: The voice assistant shall ask which seat to adjust when a zone-specific climate request cannot be attributed to a seat with sufficient confidence.
+      rationale: Repair instead of guess (COG-06) applied to seat attribution (COG-01).
+      verification_method: Test
+      acceptance_criteria: With speaker confidence below 0.8, "I'm too warm" produces a question naming the occupied seats and no setpoint changes before an answer.
+      cognitive_capability: [COG-01, COG-06]
+      scenario:
+        given:
+          - {signal: ignition_state, op: "==", value: "ON"}
+          - {signal: speaker_confidence, op: "<", value: 0.8}
+          - {signal: seat_occupied_passenger, op: "==", value: true}
+        when: {trigger: UTTERANCE, intent: thermal_discomfort.hot, example: "I'm too warm"}
+        then:
+          - {type: ASK, say: "Is that for you in the driver's seat or the passenger seat?"}
+  - key: SCN-CLIM-04
+    title: Hot occupant with window open
+    finding: Cooling with a window open wastes energy; closing a window is high-impact and needs confirmation.
+    proposal:
+      category: SYS-COG
+      title: Confirm before closing a window to cool
+      statement: The voice assistant shall, on a hot-discomfort utterance while the speaker's window is open and AC is off, ask to close the window and switch on air conditioning, acting only after confirmation.
+      rationale: Combines comfort intent with the high-impact tier for glazing (COG-14).
+      verification_method: Test
+      acceptance_criteria: The window does not move before "yes"; after "yes" the window closes and AC turns on; after "no" only the setpoint is lowered.
+      cognitive_capability: [COG-02, COG-10, COG-14]
+      scenario:
+        given:
+          - {signal: ignition_state, op: "==", value: "ON"}
+          - {signal: speaker_seat, op: "==", value: driver}
+          - {signal: window_pos_driver, op: ">", value: 10}
+          - {signal: ac_on, op: "==", value: false}
+          - {signal: outside_temp, op: ">", value: 25}
+        when: {trigger: UTTERANCE, intent: thermal_discomfort.hot, example: "It's boiling in here"}
+        then:
+          - {type: CONFIRM_THEN_ACT, target: window_pos_driver, value: "0 %", say: "Your window's open. Shall I close it and switch on the air conditioning?"}
+          - {type: ACT, target: ac_on, value: true, say: "Done, AC is on."}
+  - key: SCN-CLIM-05
+    title: Sustained thermal deviation
+    finding: Occupants often endure discomfort without asking; a partner notices and offers help at a quiet moment.
+    proposal:
+      category: SYS-COG
+      title: Offer help on sustained thermal discomfort
+      statement: The voice assistant shall suggest a climate adjustment when the cabin temperature has deviated more than 4 °C from the driver setpoint for 5 minutes, only while driver workload is low.
+      rationale: Proactive help with a named trigger (COG-12), timed to workload (COG-13).
+      verification_method: Test
+      acceptance_criteria: The suggestion names the measured temperature, occurs only in low-workload segments, and is not repeated within 30 minutes after "no".
+      cognitive_capability: [COG-12, COG-13, COG-18]
+      scenario:
+        given:
+          - {signal: ignition_state, op: "==", value: "ON"}
+          - {signal: ac_on, op: "==", value: false}
+          - {signal: driver_workload, op: "==", value: low}
+        when: {trigger: THERMAL_DEVIATION_SUSTAINED}
+        then:
+          - {type: SUGGEST, target: ac_on, value: true, say: "It's {cabin_temp} degrees in here, warmer than your {setpoint_driver}. Shall I turn on the AC?"}
+  - key: SCN-CLIM-06
+    title: Windshield fogging
+    finding: Fogging reduces visibility; defrost is a comfort-tier action with a safety benefit and can be executed immediately.
+    proposal:
+      category: SYS-COG
+      title: Clear windshield fog
+      statement: The voice assistant shall switch on windshield defrost when fogging is detected and inform the driver.
+      rationale: Visibility support; comfort-tier action, undoable by voice.
+      verification_method: Test
+      acceptance_criteria: Within 5 s of the fog signal, defrost is on and a one-sentence notice is spoken, deferred if workload is high.
+      cognitive_capability: [COG-02, COG-12, COG-13]
+      scenario:
+        given:
+          - {signal: ignition_state, op: "==", value: "ON"}
+          - {signal: front_defrost, op: "==", value: false}
+          - {signal: windshield_fog, op: "==", value: true, note: optional fitment; scenario applies only where fitted}
+        when: {trigger: WINDSHIELD_FOG}
+        then:
+          - {type: ACT, target: front_defrost, value: true}
+          - {type: DEFER, say: "The windshield was fogging up, so I switched on the defrost.", note: spoken when workload is low}
+
+  # ---------------- Entry and exit ----------------
+  - key: SCN-ENTRY-01
+    title: Ignition on with a known profile
+    finding: Production assistants greet and restore profile settings; a companion also recalls the occupant's remembered preferences.
+    proposal:
+      category: SYS-COG
+      title: Greet and restore preferences at ignition
+      statement: The voice assistant shall, at ignition on with an identified profile, apply the remembered climate preference and greet the occupant in at most one sentence.
+      rationale: Personal memory (COG-08) made visible at the start of every trip; short to respect departure workload.
+      verification_method: Test
+      acceptance_criteria: With a stored preference of 21 °C, the driver setpoint is 21 °C within 3 s of IGN_ON and the greeting is at most 12 words.
+      cognitive_capability: [COG-08, COG-15]
+      scenario:
+        given:
+          - {signal: seat_occupied_driver, op: "==", value: true}
+          - {signal: active_profile, op: known}
+          - {signal: memory_climate_preference, op: known}
+        when: {trigger: IGN_ON}
+        then:
+          - {type: ACT, target: setpoint_driver, value: "@memory_climate_preference"}
+          - {type: INFORM, say: "Morning, {profile_name}. I've set it to your usual {memory_climate_preference} degrees."}
+  - key: SCN-ENTRY-02
+    title: Driver leaves with ignition on
+    finding: Leaving the vehicle with ignition on is a common oversight.
+    proposal:
+      category: SYS-COG
+      title: Remind when the driver leaves with ignition on
+      statement: The voice assistant shall inform the occupants when the driver door opens with ignition on, the vehicle in P, and the driver seat no longer occupied.
+      rationale: Grounded situational awareness (COG-02) without any actuation.
+      verification_method: Test
+      acceptance_criteria: The reminder plays within 2 s of the conditions and is not repeated within the same stop.
+      cognitive_capability: [COG-02]
+      scenario:
+        given:
+          - {signal: ignition_state, op: "==", value: "ON"}
+          - {signal: gear, op: "==", value: P}
+          - {signal: seat_occupied_driver, op: "==", value: false}
+        when: {trigger: DOOR_OPEN, example: driver door}
+        then:
+          - {type: INFORM, say: "The car is still switched on."}
+  - key: SCN-EXIT-01
+    title: Ignition off with window open
+    finding: Windows left open after parking are a theft and weather risk.
+    proposal:
+      category: SYS-COG
+      title: Offer to close windows at ignition off
+      statement: The voice assistant shall, at ignition off with any window or the sunroof open, ask whether to close them and close them only after confirmation.
+      rationale: High-impact glazing action (COG-14) with confirmation; helpful at a low-workload moment.
+      verification_method: Test
+      acceptance_criteria: No glazing moves without "yes"; after "yes" all open windows and the sunroof close with anti-pinch active.
+      cognitive_capability: [COG-02, COG-14]
+      scenario:
+        given:
+          - {signal: gear, op: "==", value: P}
+          - {signal: any_window_open, op: "==", value: true}
+        when: {trigger: IGN_OFF}
+        then:
+          - {type: CONFIRM_THEN_ACT, target: window_pos, zone: all, value: "0 %", say: "A window is still open. Shall I close it?"}
+  - key: SCN-EXIT-02
+    title: Occupant left in the rear
+    finding: Child presence detection is a recognised safety theme (Euro NCAP); the companion adds a spoken reminder at exit.
+    proposal:
+      category: SYS-SAFE
+      title: Rear occupant reminder at exit
+      statement: The voice assistant shall remind the driver to check the rear seats when ignition is switched off and a rear occupant is detected.
+      rationale: Hazard candidate (occupant left in vehicle); preliminary class to be confirmed.
+      preliminary_asil: A
+      verification_method: Test
+      acceptance_criteria: With a rear occupant detected, the reminder plays at IGN_OFF before the driver door opens in 100 % of trials; never plays when the rear is empty.
+      cognitive_capability: [COG-02]
+      standard_references: [ISO 26262, Euro NCAP child presence detection]
+      scenario:
+        given:
+          - {signal: gear, op: "==", value: P}
+          - {signal: rear_occupant_detected, op: "==", value: true, note: optional fitment; falls back to rear seat occupancy}
+        when: {trigger: IGN_OFF}
+        then:
+          - {type: INFORM, say: "Please check the back seat before you leave."}
+
+  - key: SCN-ENTRY-03
+    title: Passenger boards
+    finding: A passenger joining mid-trip has their own comfort zone; the companion can restore it if the passenger has a profile.
+    proposal:
+      category: SYS-COG
+      title: Offer passenger-zone settings when a passenger boards
+      statement: The voice assistant shall, when the passenger seat becomes occupied with the vehicle stationary, offer to apply the passenger's remembered climate preference if a passenger profile is identified, and otherwise stay silent.
+      rationale: Seat-aware personalisation (COG-01, COG-08) without speaking to unidentified occupants.
+      verification_method: Test
+      acceptance_criteria: With an identified passenger profile, the offer names the stored temperature; with no profile, nothing is spoken.
+      cognitive_capability: [COG-01, COG-08]
+      scenario:
+        given:
+          - {signal: ignition_state, op: "==", value: "ON"}
+          - {signal: vehicle_speed, op: "==", value: 0}
+          - {signal: active_profile, op: known, note: passenger profile identified by phone or voice enrolment}
+        when: {trigger: SEAT_OCCUPIED, example: passenger seat}
+        then:
+          - {type: SUGGEST, target: setpoint_passenger, value: "@memory_climate_preference", say: "Hi {passenger_name}, shall I set your side to your usual {memory_climate_preference} degrees?"}
+  - key: SCN-ENTRY-04
+    title: Rear door closed on a child seat
+    finding: Child lock is often forgotten; enabling it is high-impact and needs confirmation.
+    proposal:
+      category: SYS-SAFE
+      title: Offer child lock when a child seat is occupied
+      statement: The voice assistant shall offer to enable the rear child lock when a rear door closes, the corresponding seat is occupied, and the child lock is off, enabling it only after confirmation.
+      rationale: Safety-relevant convenience through the high-impact tier (COG-14); preliminary class to be confirmed.
+      preliminary_asil: QM
+      verification_method: Test
+      acceptance_criteria: Offer spoken within 2 s of the door closing under the conditions; lock state changes only after "yes".
+      cognitive_capability: [COG-02, COG-14]
+      standard_references: [ISO 26262]
+      scenario:
+        given:
+          - {signal: gear, op: "==", value: P}
+          - {signal: seat_occupied_rear_right, op: "==", value: true}
+          - {signal: child_lock, op: "==", value: false}
+        when: {trigger: DOOR_CLOSE, example: rear-right door}
+        then:
+          - {type: CONFIRM_THEN_ACT, target: child_lock, value: true, say: "Shall I switch on the child lock for the back?"}
+  - key: SCN-ENTRY-05
+    title: Charging starts
+    finding: Owners want to know when the car will be ready without opening an app.
+    proposal:
+      category: SYS-COG
+      title: State charging time when charging starts
+      statement: The voice assistant shall, when charging starts with an occupant in the vehicle, state the expected time to reach the charge target.
+      rationale: Grounded energy information at the moment it matters (COG-02).
+      verification_method: Test
+      acceptance_criteria: The statement uses the charging system's estimate and is not spoken if the cabin is empty.
+      cognitive_capability: [COG-02]
+      scenario:
+        given:
+          - {signal: seat_occupied_driver, op: "==", value: true}
+          - {signal: battery_soc, op: known}
+        when: {trigger: CHARGING_STARTED}
+        then:
+          - {type: INFORM, say: "Charging from {battery_soc} percent. You'll be at 80 percent in about {time_to_target} minutes."}
+
+  # ---------------- Driving ----------------
+  - key: SCN-DRV-01
+    title: Low range on the current route
+    finding: Range anxiety is a top EV concern; a partner raises it early with a concrete plan.
+    proposal:
+      category: SYS-COG
+      title: Suggest a charging stop on low range
+      statement: The voice assistant shall suggest adding a charging stop when the predicted range at the destination falls below 30 km, and shall hold the suggestion while driver workload is high.
+      rationale: Proactive help (COG-12) with planning (COG-10), timed to workload (COG-13).
+      verification_method: Test
+      acceptance_criteria: The suggestion names the predicted range and one charger on route; it is spoken only in low-workload segments; accepting adds the stop.
+      cognitive_capability: [COG-10, COG-12, COG-13]
+      scenario:
+        given:
+          - {signal: nav_guidance_active, op: "==", value: true}
+          - {signal: range_margin_at_destination, op: "<", value: 30}
+          - {signal: driver_workload, op: "!=", value: high}
+        when: {trigger: LOW_RANGE}
+        then:
+          - {type: SUGGEST, say: "You'd arrive with about {range_margin_at_destination} km left. There's a fast charger on the way at {charger_name}. Add it?"}
+  - key: SCN-DRV-02
+    title: Rain with windows open while driving
+    finding: Rain with open glazing is a common nuisance; closing is high-impact and depends on speed.
+    proposal:
+      category: SYS-COG
+      title: Offer to close glazing when rain starts
+      statement: The voice assistant shall offer to close open windows and the sunroof when rain is detected, act only after confirmation, and defer the offer while driver workload is high.
+      rationale: Situated help (COG-02) through the high-impact tier (COG-14).
+      verification_method: Test
+      acceptance_criteria: The offer is spoken within 5 s in low workload; no glazing moves without "yes".
+      cognitive_capability: [COG-02, COG-13, COG-14]
+      scenario:
+        given:
+          - {signal: ignition_state, op: "==", value: "ON"}
+          - {signal: any_window_open, op: "==", value: true}
+          - {signal: driver_workload, op: "!=", value: high}
+        when: {trigger: RAIN_DETECTED}
+        then:
+          - {type: CONFIRM_THEN_ACT, target: window_pos, zone: all, value: "0 %", say: "It's started raining and a window is open. Close it?"}
+  - key: SCN-DRV-03
+    title: Incoming call during a manoeuvre
+    finding: Call announcements during manoeuvres add demand.
+    proposal:
+      category: SYS-DIST
+      title: Hold call announcements during high workload
+      statement: The voice assistant shall delay announcing an incoming call while driver workload is high and announce it as soon as workload drops, unless the caller is marked urgent.
+      rationale: Workload-aware timing (COG-13, ISO 15005).
+      verification_method: Test
+      acceptance_criteria: No call announcement starts during a high-workload segment; announcement follows within 2 s of workload dropping.
+      cognitive_capability: [COG-03, COG-13]
+      standard_references: [ISO 15005]
+      scenario:
+        given:
+          - {signal: driver_workload, op: "==", value: high}
+          - {signal: phone_connected, op: "==", value: true}
+        when: {trigger: INCOMING_CALL}
+        then:
+          - {type: DEFER, say: "{caller} is calling. Answer?", note: announced when workload is no longer high}
+  - key: SCN-DRV-04
+    title: Driver drowsiness
+    finding: Fatigue is a safety and wellbeing concern; affect-related features are opt-in (COG-16).
+    proposal:
+      category: SYS-COG
+      title: Suggest a break on drowsiness
+      statement: When affect awareness is enabled, the voice assistant shall suggest a break and offer the nearest rest area when the driver-monitoring system reports drowsiness.
+      rationale: Companion wellbeing support (COG-16) using a separately specified driver-monitoring function; opt-in by default off.
+      verification_method: Test
+      acceptance_criteria: With the opt-in off, no suggestion occurs; with it on, the suggestion follows within 10 s of the drowsy signal in low or medium workload.
+      cognitive_capability: [COG-12, COG-16]
+      standard_references: [GDPR Art. 9, EU AI Act]
+      scenario:
+        given:
+          - {signal: affect_awareness_enabled, op: "==", value: true}
+          - {signal: driver_drowsiness, op: "==", value: drowsy, note: optional fitment (driver-monitoring system)}
+          - {signal: driver_workload, op: "!=", value: high}
+        when: {trigger: DROWSINESS_DETECTED}
+        then:
+          - {type: SUGGEST, say: "You seem tired. There's a rest area in {distance} km. Shall I navigate there?"}
+  - key: SCN-DRV-05
+    title: Long continuous drive
+    finding: Break reminders based on driving time need no biometric data.
+    proposal:
+      category: SYS-COG
+      title: Suggest a break after a long drive
+      statement: The voice assistant shall suggest a break after two hours of continuous driving, when driver workload is low.
+      rationale: Wellbeing support without biometrics (COG-12, COG-13).
+      verification_method: Test
+      acceptance_criteria: Suggestion at 120 min (±5) of trip time in low workload; "not now" defers it by 30 min.
+      cognitive_capability: [COG-12, COG-13]
+      scenario:
+        given:
+          - {signal: trip_duration, op: ">=", value: 120}
+          - {signal: driver_workload, op: "==", value: low}
+        when: {trigger: LONG_DRIVE}
+        then:
+          - {type: SUGGEST, say: "You've been driving for two hours. Fancy a break at the next stop?"}
+  - key: SCN-DRV-06
+    title: Request to engage driver assistance
+    finding: Voice must not engage or disengage driver assistance (prohibited tier).
+    proposal:
+      category: SYS-SAFE
+      title: Refuse voice control of driver assistance
+      statement: The voice assistant shall refuse requests to engage or disengage driver assistance functions and tell the driver which control to use.
+      rationale: Prohibited tier (COG-14); vehicle-motion authority stays with dedicated controls.
+      preliminary_asil: B
+      verification_method: Test
+      acceptance_criteria: All cruise and lane-keeping requests are refused with a pointer to the steering-wheel control; no ADAS state changes.
+      cognitive_capability: [COG-14]
+      standard_references: [ISO 26262, ISO 21448]
+      scenario:
+        given:
+          - {signal: ignition_state, op: "==", value: "ON"}
+        when: {trigger: UTTERANCE, intent: adas_control, example: "Turn on cruise control"}
+        then:
+          - {type: REFUSE, target: adas_cruise_active, say: "I can't control cruise control. Use the button on the steering wheel."}
+  - key: SCN-DRV-08
+    title: Time to leave for an event
+    finding: Calendar-linked departure prompts are valued when they arrive before the occupant would otherwise be late.
+    proposal:
+      category: SYS-COG
+      title: Departure reminder from the calendar
+      statement: The voice assistant shall remind an occupant in the parked vehicle when it is time to leave for the next calendar event, including the current travel time.
+      rationale: Anticipation from a named personal source (COG-12, COG-18); stationary context.
+      verification_method: Test
+      acceptance_criteria: The reminder fires when travel time plus 5 minutes equals the time to the event, names the event, and is dismissible.
+      cognitive_capability: [COG-12, COG-18]
+      scenario:
+        given:
+          - {signal: gear, op: "==", value: P}
+          - {signal: seat_occupied_driver, op: "==", value: true}
+          - {signal: calendar_next_event, op: known}
+        when: {trigger: CALENDAR_DEPARTURE}
+        then:
+          - {type: SUGGEST, say: "Time to head to {event_title}; it's {eta} minutes away with current traffic. Start navigation?"}
+  - key: SCN-DRV-07
+    title: Calendar departure reminder
+    finding: Linked calendars allow timely departure prompts (Hyundai/Kia reference).
+    proposal:
+      category: SYS-COG
+      title: Remind when it's time to leave for an event
+      statement: The voice assistant shall, at ignition on, inform the driver about the next calendar event within 60 minutes and offer navigation to it.
+      rationale: Proactive help grounded in a named source (COG-12, COG-18).
+      verification_method: Test
+      acceptance_criteria: With an event in 40 minutes at a known address, the prompt names the event and ETA and "yes" starts guidance.
+      cognitive_capability: [COG-12, COG-18]
+      scenario:
+        given:
+          - {signal: active_profile, op: known}
+          - {signal: calendar_next_event, op: "<=", value: 60}
+          - {signal: nav_destination_set, op: "==", value: false}
+          - {signal: vehicle_speed, op: "==", value: 0}
+        when: {trigger: IGN_ON}
+        then:
+          - {type: SUGGEST, say: "{event_title} starts in {calendar_next_event} minutes, about {eta} away. Shall I take you there?"}
+
+  # ---------------- Arrival ----------------
+  - key: SCN-ARR-01
+    title: Arrival with an EV
+    finding: At arrival, owners want to know whether to charge.
+    proposal:
+      category: SYS-COG
+      title: Charging advice on arrival
+      statement: The voice assistant shall, on arrival, state the battery level and whether charging is advisable before the next calendar trip.
+      rationale: Grounded, personal, and timely (COG-02, COG-12).
+      verification_method: Test
+      acceptance_criteria: The statement names the state of charge from the signal and the next trip when known; no statement if charging is already active.
+      cognitive_capability: [COG-02, COG-12]
+      scenario:
+        given:
+          - {signal: charging_active, op: "==", value: false}
+          - {signal: battery_soc, op: known}
+          - {signal: driver_workload, op: "!=", value: high}
+        when: {trigger: DESTINATION_REACHED}
+        then:
+          - {type: INFORM, say: "You're at {battery_soc} percent. That's enough for tomorrow's commute."}
+  - key: SCN-ARR-02
+    title: Parking with sunroof open and rain forecast
+    finding: Cloud weather lets the companion anticipate rain while parked.
+    proposal:
+      category: SYS-COG
+      title: Ask to close the sunroof when rain is forecast
+      statement: The voice assistant shall ask whether to close the sunroof when the vehicle is put in park with the sunroof open and the rain probability for the next hour is at least 60 %.
+      rationale: Anticipation from a named source (COG-12) through the high-impact tier (COG-14).
+      verification_method: Test
+      acceptance_criteria: Question asked at GEAR_PARK under the conditions; sunroof closes only after "yes"; no question when offline.
+      cognitive_capability: [COG-12, COG-14]
+      scenario:
+        given:
+          - {signal: sunroof_pos, op: ">", value: 0}
+          - {signal: rain_forecast_probability, op: ">=", value: 60}
+          - {signal: network_available, op: "==", value: true}
+        when: {trigger: GEAR_PARK}
+        then:
+          - {type: CONFIRM_THEN_ACT, target: sunroof_pos, value: "0 %", say: "Rain is likely in the next hour. Close the sunroof?"}

@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from . import cognition, config, db, orchestrator as orch, register
+from . import cognition, config, db, orchestrator as orch, register, vehicle
 from .agents import AGENTS
 from .export import excel, gather, word
 from .models import State
@@ -97,6 +97,22 @@ def overview():
         "tokens": sum(((r["result"] or {}).get("metrics", {}).get("input_tokens", 0)
                        + (r["result"] or {}).get("metrics", {}).get("output_tokens", 0)) for r in all_runs),
     }
+
+
+@app.get("/api/signals")
+def signals_catalog():
+    cat = vehicle.catalog()
+    open_props = [register.Proposal.model_validate(p["proposal"]) for p in register.proposals("open")]
+    use = vehicle.usage(register.included(), open_props)
+    return {"source": cat["source"], "version": cat["version"], "status": cat["status"],
+            "domains": cat["domains"], "responses": cat["responses"],
+            "signals": [{**s, "used_by": use["signals"].get(s["alias"], [])} for s in cat["signals"]],
+            "triggers": [{**t, "used_by": use["triggers"].get(t["id"], [])} for t in cat["triggers"]]}
+
+
+@app.post("/api/scenarios/render")
+def render_scenario(scenario: dict):
+    return {**vehicle.render_parts(scenario), "issues": vehicle.validate(scenario)}
 
 
 @app.get("/api/findings")

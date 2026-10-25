@@ -31,6 +31,7 @@ Numbers are stable. A new version of `SYS-FUNC-014` keeps that identifier. A rej
 | Priority | Must, Should, or Could |
 | Preliminary ASIL | QM, A, B, C, or D for `SYS-SAFE`; empty for other prefixes unless the safety agent links them |
 | Cognitive capability | Zero or more IDs `COG-01`…`COG-20` from [09-cognitive-companion.md](09-cognitive-companion.md); required on `SYS-COG`, allowed on any prefix |
+| Scenario | GIVEN / WHEN / THEN behaviour specification for behavioural requirements ([12-vehicle-context.md](12-vehicle-context.md)); empty for non-behavioural ones |
 | Standard references | For example GDPR Art. 5, ISO 26262, ISO 21448, ISO/PAS 8800, ISO 21434, UN R155, ISO 15005, EU AI Act Art. 50 |
 | Verification method | Test, Analysis, Inspection, or Demonstration |
 | Acceptance criteria | Observable pass condition |
@@ -46,6 +47,14 @@ System requirements use this statement shape:
 Stakeholder needs use:
 
 > The driver shall be able to … / The occupant expects …
+
+Behavioural requirements keep that one-line statement and add a structured scenario:
+
+> **GIVEN** conditions on catalog vehicle signals
+> **WHEN** one trigger: an utterance with an intent, a vehicle event such as IGN_ON or DOOR_OPEN, or a derived trigger
+> **THEN** the companion's responses: ACT, CONFIRM_THEN_ACT, ASK, SUGGEST, INFORM, DEFER, or REFUSE
+
+The statement is what the supplier contracts against. The scenario is the specification and the basis for the acceptance test.
 
 ## Lifecycle
 
@@ -123,3 +132,21 @@ The **Cognitive capability** attribute is the second trace axis. It links a requ
 **Acceptance criteria:** In the scripted low-range, traffic-delay, and calendar-departure scenarios, each suggestion states its trigger; “not now” dismisses it; “stop suggesting charging stops” prevents that category for the rest of the profile’s use until re-enabled.
 
 **State:** Draft until distraction review, then Baselined.
+
+### Behavioural, with scenario
+
+**ID:** `SYS-COG-021`
+
+**Statement:** The voice assistant shall respond to a cold-discomfort utterance by raising the climate setpoint of the speaker's zone by 2 °C and stating the change.
+
+**Scenario:**
+
+- **GIVEN** `ignition_state` = ON AND `speaker_seat` ≠ unknown AND `speaker_confidence` ≥ 0.8 AND `cabin_temp` < `setpoint_driver`
+- **WHEN** UTTERANCE `thermal_discomfort.cold`: "I'm freezing"
+- **THEN** ACT `climate_setpoint` [speaker zone] → +2 °C: "Warming your side up to {new_setpoint} degrees."
+
+**Cognitive capability:** COG-01, COG-02, COG-04
+
+**Verification method:** Test
+
+**Acceptance criteria:** In the four-seat suite, "I'm freezing" from each seat raises only that zone's setpoint by 2 °C and the spoken response names the new value.

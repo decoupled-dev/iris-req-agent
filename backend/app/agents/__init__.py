@@ -39,7 +39,8 @@ class AgentSpec:
                 f"Do your job as described in the system prompt and finish with submit_result.")
 
 
-RESEARCH = ("google_assistant_reference", "oem_feature_research", "customer_expectations", "companion_cognition")
+RESEARCH = ("google_assistant_reference", "oem_feature_research", "customer_expectations", "companion_cognition",
+            "vehicle_context")
 ASSURANCE = ("gdpr_privacy", "driver_distraction", "safety_cybersecurity")
 _PACK_TOOLS = ("search_knowledge", "list_requirements", "submit_result")
 _ASSURANCE_TOOLS = ("get_dependency_output", "search_knowledge", "list_requirements", "list_open_proposals",
@@ -55,6 +56,9 @@ AGENTS: dict[str, AgentSpec] = {a.id: a for a in (
     AgentSpec("companion_cognition", "Companion cognition", "research",
               "Cognitive capabilities up to the target level",
               ("get_capability_catalog", "get_cognitive_coverage", "list_requirements", "submit_result")),
+    AgentSpec("vehicle_context", "Vehicle context", "research",
+              "Signals and triggers into GIVEN/WHEN/THEN behaviour",
+              ("get_vehicle_signals", "search_knowledge", "check_scenarios", "list_requirements", "submit_result")),
     AgentSpec("requirements_synthesis", "Requirements synthesis", "synthesis",
               "Merge research into one coherent shall-set",
               ("get_dependency_output", "list_requirements", "list_open_proposals", "submit_result"),

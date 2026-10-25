@@ -28,6 +28,18 @@ Columns: Capability ID, Faculty, Capability, Level, Covered (yes or no), Require
 
 A header row states the target and the specified cognitive level.
 
+### Sheet: Scenarios
+
+One row per included requirement that has a GIVEN / WHEN / THEN scenario.
+
+Columns: Requirement ID, Title, State, Given, When, Then, Signals, Cognitive capability.
+
+### Sheet: Vehicle signals
+
+One row per catalog signal ([12-vehicle-context.md](12-vehicle-context.md)).
+
+Columns: Alias, Label, Domain, VSS path, VHAL property, Type, Unit, Access, Action tier, Availability, Privacy, Used by.
+
 ### Sheet: Open items
 
 Rows for:
@@ -54,17 +66,18 @@ Columns: Run ID, Agent, Mode (local or remote), Provider, Model, Turns, Input to
 1. **Document control** — program name, export time, register revision (highest requirement version timestamp), authoring tool name, state counts, target and specified cognitive level
 2. **Scope** — product definition from [01-scope.md](01-scope.md), including the cognitive level scale and companion principles from [09-cognitive-companion.md](09-cognitive-companion.md)
 3. **Context assumptions** — speech path, vehicle signals, display; AAOS or QNX recorded as an open deployment assumption, not as a design choice
-4. **Stakeholder needs** — all included `STK-` items
-5. **System requirements by category** — functional, performance, HMI, then the groups below
-6. **Cognitive companion** — `SYS-COG` items grouped by level, then the cognitive coverage table
-7. **Privacy** — `SYS-PRIV` items and the note that lawful basis remains subject to privacy review
-8. **Driver distraction** — `SYS-DIST` and linked HMI items
-9. **Safety and cybersecurity** — `SYS-SAFE` and `SYS-SEC`, with preliminary ASIL and the safety-manager confirmation note on every safety item
-10. **Verification matrix** — ID, verification method, acceptance criteria, state
-11. **Open points** — the Open items sheet, in reading order
-12. **Change record** — change notes for versions greater than 1 since the previous export, when a previous export timestamp is stored
+4. **Vehicle context** — signal catalog status and per-domain summary, triggers, response types, and the number of behavioural requirements with scenarios
+5. **Stakeholder needs** — all included `STK-` items
+6. **System requirements by category** — functional, performance, HMI, then the groups below
+7. **Cognitive companion** — `SYS-COG` items grouped by level, then the cognitive coverage table
+8. **Privacy** — `SYS-PRIV` items and the note that lawful basis remains subject to privacy review
+9. **Driver distraction** — `SYS-DIST` and linked HMI items
+10. **Safety and cybersecurity** — `SYS-SAFE` and `SYS-SEC`, with preliminary ASIL and the safety-manager confirmation note on every safety item
+11. **Verification matrix** — ID, verification method, acceptance criteria, state
+12. **Open points** — the Open items sheet, in reading order
+13. **Change record** — change notes for versions greater than 1 since the previous export, when a previous export timestamp is stored
 
-Each requirement in the body shows ID, state, statement, rationale, source, priority, and standard references.
+Each requirement in the body shows ID, state, statement, its GIVEN / WHEN / THEN scenario when it has one, rationale, source, priority, and standard references.
 
 ## File names
 

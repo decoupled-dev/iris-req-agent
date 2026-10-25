@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import re
 
-from . import cognition
+from . import cognition, vehicle
 from .models import ASIL_NOTE, CATEGORIES, INCLUDED_STATES, VERIFICATION_METHODS, RunContext, State
 
 CL5_CAPS = {"COG-09", "COG-15", "COG-16", "COG-17"}
+BEHAVIOURAL = {"SYS-FUNC", "SYS-HMI", "SYS-COG", "SYS-DIST"}
 REQUIRED = ("title", "statement", "rationale", "source", "category", "priority")
 
 
@@ -34,6 +35,12 @@ def checks(ctx: RunContext) -> list[dict]:
             if CL5_CAPS & set(r.cognitive_capability) and "privacy" not in r.change_note.lower():
                 issue("cl5-review", r.id, f"{r.id} baselined without privacy review",
                       "CL5 companion items need a privacy reviewer on the change note.", "critical")
+        if r.scenario is not None:
+            for v in vehicle.validate(r.scenario):
+                issue(f"scenario:{v['check']}", r.id, f"{r.id} scenario: {v['check']}", v["detail"], v["severity"])
+        elif r.category in BEHAVIOURAL and vehicle.REACTIVE_CAPS & set(r.cognitive_capability):
+            issue("scenario-missing", r.id, f"{r.id} has no GIVEN/WHEN/THEN",
+                  "Behavioural requirement reacting to vehicle state should carry a scenario.", "minor")
         if r.category == "SYS-SAFE" and r.state != State.baselined and r.asil_note != ASIL_NOTE:
             issue("asil", r.id, f"{r.id} ASIL note changed", f"Preliminary ASIL must stay marked '{ASIL_NOTE}'.")
 
@@ -54,6 +61,13 @@ def checks(ctx: RunContext) -> list[dict]:
             "COG-13" in r.cognitive_capability and r.category == "SYS-DIST" for r in included):
         issue("proactive", "COG-12", "Proactive behaviour without workload timing",
               "A COG-12 item exists but no SYS-DIST item cites COG-13.")
+
+    used_triggers = {r.scenario.when.trigger for r in included if r.scenario}
+    if any(r.scenario for r in included):
+        for t in vehicle.triggers():
+            if t not in used_triggers:
+                issue("trigger-unused", t, f"Trigger {t} has no behaviour",
+                      f"No included requirement reacts to {vehicle.triggers()[t]['label']}.", "minor")
 
     target = ctx.project.get("target_cognitive_level", "CL5")
     covered = {row["id"] for row in cognition.coverage(ctx.requirements) if row["covered"]}

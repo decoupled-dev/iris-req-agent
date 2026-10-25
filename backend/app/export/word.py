@@ -6,7 +6,7 @@ from io import BytesIO
 
 from docx import Document
 
-from .. import cognition
+from .. import cognition, vehicle
 from ..knowledge import load_pack
 from ..models import Requirement
 from . import Handoff
@@ -24,6 +24,12 @@ def _requirement(doc: Document, r: Requirement) -> None:
         meta.append(f"Preliminary ASIL: {r.preliminary_asil} ({r.asil_note})")
     if r.standard_references:
         meta.append(f"References: {', '.join(r.standard_references)}")
+    if r.scenario:
+        parts = vehicle.render_parts(r.scenario)
+        for kw in ("given", "when", "then"):
+            para = doc.add_paragraph()
+            para.add_run(f"{kw.upper()} ").bold = True
+            para.add_run(parts[kw])
     doc.add_paragraph(f"Rationale: {r.rationale}")
     doc.add_paragraph(" · ".join(meta))
 
@@ -73,10 +79,30 @@ def build(h: Handoff) -> bytes:
                       "interface; a display is subject to driver-distraction rules. Deployment: "
                       f"{h.project.get('deployment_assumption', 'open')} (open assumption, not a design choice).")
 
-    _group(doc, "4. Stakeholder needs", by("STK"))
-    _group(doc, "5. System requirements by category", by("SYS-FUNC", "SYS-PERF", "SYS-HMI"))
+    doc.add_heading("4. Vehicle context", level=1)
+    cat = vehicle.catalog()
+    doc.add_paragraph(f"Signal catalog: {cat['source']} ({cat['version']}), {cat['status']}. Signals use COVESA VSS "
+                      "paths with an indicative AAOS VHAL mapping; the runtime choice stays open.")
+    names = {d["id"]: d["name"] for d in cat["domains"]}
+    rows = []
+    for d in cat["domains"]:
+        sigs = [s for s in h.signals if s["domain"] == d["id"]]
+        rows.append([names[d["id"]], str(len(sigs)), str(sum(1 for s in sigs if s["access"] == "actuator")),
+                     str(sum(1 for s in sigs if s["used_by"]))])
+    _table(doc, ["Domain", "Signals", "Actuators", "Used by requirements"], rows)
+    doc.add_paragraph("Triggers:")
+    for t in cat["triggers"]:
+        doc.add_paragraph(f"{t['id']} — {t['label']}", style="List Bullet")
+    doc.add_paragraph("Responses:")
+    for r in cat["responses"]:
+        doc.add_paragraph(f"{r['type']} — {r['rule']}", style="List Bullet")
+    doc.add_paragraph(f"{len(h.scenarios)} behavioural requirements carry a GIVEN / WHEN / THEN scenario, printed "
+                      "with each requirement below and listed in the Scenarios sheet of the workbook.")
 
-    doc.add_heading("6. Cognitive companion", level=1)
+    _group(doc, "5. Stakeholder needs", by("STK"))
+    _group(doc, "6. System requirements by category", by("SYS-FUNC", "SYS-PERF", "SYS-HMI"))
+
+    doc.add_heading("7. Cognitive companion", level=1)
     cog = by("SYS-COG")
     level_of = {c["id"]: c["level"] for c in cognition.catalog()}
     for level in cognition.LEVELS[1:]:
@@ -86,19 +112,19 @@ def build(h: Handoff) -> bytes:
            [[f"{c['id']} {c['title']}", c["level"], "yes" if c["covered"] else "no", ", ".join(c["requirement_ids"])]
             for c in h.coverage])
 
-    _group(doc, "7. Privacy", by("SYS-PRIV"), "Lawful basis remains subject to privacy review.")
-    _group(doc, "8. Driver distraction", by("SYS-DIST"))
-    _group(doc, "9. Safety and cybersecurity", by("SYS-SAFE", "SYS-SEC"),
+    _group(doc, "8. Privacy", by("SYS-PRIV"), "Lawful basis remains subject to privacy review.")
+    _group(doc, "9. Driver distraction", by("SYS-DIST"))
+    _group(doc, "10. Safety and cybersecurity", by("SYS-SAFE", "SYS-SEC"),
            "Preliminary ASIL values are to be confirmed by the safety manager.")
 
-    doc.add_heading("10. Verification matrix", level=1)
+    doc.add_heading("11. Verification matrix", level=1)
     _table(doc, ["ID", "Method", "Acceptance criteria", "State"],
            [[r.id, r.verification_method, r.acceptance_criteria, str(r.state)] for r in h.requirements])
 
-    doc.add_heading("11. Open points", level=1)
+    doc.add_heading("12. Open points", level=1)
     _table(doc, ["Kind", "ID", "Summary", "Owner"], [[o["kind"], o["id"], o["summary"], o["owner"]] for o in h.open_items])
 
-    doc.add_heading("12. Change record", level=1)
+    doc.add_heading("13. Change record", level=1)
     changed = [r for r in h.requirements if r.version > 1]
     for r in changed:
         doc.add_paragraph(f"{r.id} v{r.version}: {r.change_note}", style="List Bullet")

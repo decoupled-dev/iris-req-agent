@@ -46,7 +46,7 @@ Faculty groups the capability for readers. The ID is what a requirement cites in
 
 ## Action permission tiers
 
-COG-14 and COG-10 rely on one tiering. The safety agent proposes the tier for each car-domain function; the safety manager confirms it.
+COG-14 and COG-10 rely on one tiering. Each actuator in the vehicle signal catalog carries its tier ([12-vehicle-context.md](12-vehicle-context.md)). The safety agent proposes the tier for each car-domain function; the safety manager confirms it.
 
 | Tier | Examples | Rule |
 | --- | --- | --- |
@@ -97,6 +97,7 @@ Acceptance criteria for `SYS-COG` items should reference a scripted cognitive ev
 
 ## How the pipeline uses this document
 
+- Capabilities that react to the vehicle (COG-01, 02, 12, 13, 14) are specified as GIVEN / WHEN / THEN scenarios over the vehicle signal catalog ([12-vehicle-context.md](12-vehicle-context.md)).
 - The **companion cognition** agent reads the catalog as a knowledge pack and proposes `SYS-COG` requirements per capability ([03-agents.md](03-agents.md)).
 - **Synthesis** keeps the capability ID when merging.
 - **Privacy**, **distraction**, and **safety** agents add constraints to COG-08, 09, 13, 14, 16.

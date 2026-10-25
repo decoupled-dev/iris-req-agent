@@ -6,7 +6,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
-from .. import cognition, config, orchestrator, register
+from .. import cognition, config, orchestrator, register, vehicle
 from ..models import ASIL_NOTE, Requirement, State
 
 
@@ -21,6 +21,8 @@ class Handoff:
     coverage: list[dict]
     traceability: list[dict]
     open_items: list[dict]
+    scenarios: list[dict]
+    signals: list[dict]
     run_log: list[dict] = field(default_factory=list)
 
     def stamp(self) -> str:
@@ -61,11 +63,16 @@ def gather() -> Handoff:
             open_items.append({"kind": "Cognitive coverage", "id": row["id"], "state": "Uncovered",
                                "summary": row["title"], "owner": "Systems engineering"})
 
+    use = vehicle.usage(reqs, [])
+    scenarios = [{"requirement": r, **vehicle.render_parts(r.scenario), "signals": vehicle.signals_used(r.scenario)}
+                 for r in reqs if r.scenario]
+    signals = [{**s, "used_by": use["signals"].get(s["alias"], [])} for s in vehicle.catalog()["signals"]]
+
     return Handoff(
         project=project, exported_at=datetime.now(timezone.utc), requirements=reqs,
         state_counts=dict(Counter(str(r.state) for r in reqs)), target_level=target,
         specified_level=cognition.specified_level(reqs), coverage=coverage, traceability=trace,
-        open_items=open_items,
+        open_items=open_items, scenarios=scenarios, signals=signals,
         run_log=[{**{k: r[k] for k in ("run_id", "agent_id", "mode", "status", "started", "finished", "summary")},
                   **{k: ((r["result"] or {}).get("metrics") or {}).get(k, "")
                      for k in ("provider", "model", "turns", "input_tokens", "output_tokens")}}

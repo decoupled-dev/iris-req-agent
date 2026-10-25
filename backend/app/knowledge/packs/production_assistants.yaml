@@ -13,6 +13,14 @@ entries:
       rationale: Match MBUX seat-aware behaviour.
       verification_method: Test
       acceptance_criteria: A rear-seat climate command does not change the driver temperature setpoint.
+      scenario:
+        given:
+          - {signal: seat_occupied_rear_left, op: "==", value: true}
+          - {signal: speaker_seat, op: "==", value: rear_left}
+          - {signal: speaker_confidence, op: ">=", value: 0.8}
+        when: {trigger: UTTERANCE, intent: climate.warmer, example: "Make it warmer back here"}
+        then:
+          - {type: ACT, target: setpoint_rear, value: "+2 °C", say: "Warming up the back."}
       cognitive_capability: [COG-01]
   - key: oem_mbux_followup
     title: MBUX follow-up window

@@ -81,6 +81,10 @@ Reference behaviour from production assistants that maps to the catalog:
 | Vehicle function explanations (BMW, MBUX) | COG-11 |
 | Range and calendar departure prompts (several brands) | COG-12 |
 
+## Vehicle context
+
+The vehicle signal catalog (76 signals, 17 triggers, 7 response types) and the vehicle-context scenario pack are specified in [12-vehicle-context.md](12-vehicle-context.md). The catalog is a reference, using VSS paths and an indicative VHAL mapping, to be replaced by the OEM signal database.
+
 ## Privacy themes
 
 Map to `SYS-PRIV`. Cite the theme; privacy review confirms market applicability.

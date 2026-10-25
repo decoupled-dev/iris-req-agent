@@ -11,6 +11,67 @@ export interface Finding {
   confidence: string;
 }
 
+export interface Condition {
+  signal: string;
+  op: string;
+  value?: unknown;
+  note?: string;
+}
+
+export interface ScenarioResponse {
+  type: "ACT" | "CONFIRM_THEN_ACT" | "ASK" | "SUGGEST" | "INFORM" | "DEFER" | "REFUSE";
+  target?: string;
+  zone?: string;
+  value?: unknown;
+  say?: string;
+  note?: string;
+}
+
+export interface Scenario {
+  given: Condition[];
+  when: { trigger: string; intent?: string; example?: string };
+  then: ScenarioResponse[];
+}
+
+export interface Signal {
+  alias: string;
+  label: string;
+  domain: string;
+  vss: string;
+  vhal: string;
+  type: string;
+  unit?: string;
+  range?: number[];
+  enum?: string[];
+  access: "read" | "actuator";
+  tier?: "comfort" | "high-impact" | "prohibited";
+  availability?: "optional";
+  privacy?: "personal" | "biometric";
+  family?: string;
+  zone?: string;
+  note?: string;
+  used_by: string[];
+}
+
+export interface Trigger {
+  id: string;
+  kind: "utterance" | "vehicle_event" | "derived";
+  label: string;
+  source: string;
+  stationary?: boolean;
+  used_by: string[];
+}
+
+export interface SignalCatalog {
+  source: string;
+  version: string;
+  status: string;
+  domains: { id: string; name: string }[];
+  responses: { type: string; label: string; rule: string }[];
+  signals: Signal[];
+  triggers: Trigger[];
+}
+
 export interface ProposalBody {
   id: string;
   title: string;
@@ -25,6 +86,7 @@ export interface ProposalBody {
   standard_references: string[];
   verification_method: string;
   acceptance_criteria: string;
+  scenario: Scenario | null;
   change_note: string;
 }
 
@@ -154,5 +216,6 @@ export const api = {
   reject: (pk: number) => post(`/api/proposals/${pk}/reject`),
   bulk: (pks: number[], action: "accept" | "reject", state = "Draft") =>
     post<{ done: number; errors: string[] }>("/api/proposals/bulk", { pks, action, state }),
+  signals: () => call<SignalCatalog>("/api/signals"),
   cognition: () => call<{ target: string; specified: string; capabilities: Capability[] }>("/api/cognition"),
 };

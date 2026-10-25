@@ -5,9 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from .. import cognition, compliance
+from .. import cognition, compliance, vehicle
 from ..knowledge import load_pack
-from ..models import Finding, Proposal, RunContext
+from ..models import Finding, Proposal, RunContext, Scenario
 from .types import ToolSpec
 
 
@@ -63,6 +63,24 @@ def get_dependency_output(ctx: RunContext, agent_id: str) -> dict:
     return run.model_dump(mode="json", include={"agent_id", "summary", "findings", "proposals"})
 
 
+def get_vehicle_signals(ctx: RunContext, domain: str = "") -> dict:
+    cat = vehicle.catalog()
+    sigs = [s for s in cat["signals"] if not domain or s["domain"] == domain]
+    return {"source": cat["source"], "version": cat["version"], "status": cat["status"], "domains": cat["domains"],
+            "signals": sigs, "triggers": cat["triggers"], "responses": cat["responses"]}
+
+
+def check_scenarios(ctx: RunContext, scenarios: list[dict]) -> dict:
+    results = []
+    for i, item in enumerate(scenarios):
+        try:
+            issues = vehicle.validate(item["scenario"])
+        except Exception as exc:  # Malformed scenario: report it like any other issue.
+            issues = [{"check": "schema", "severity": "major", "detail": str(exc)}]
+        results.append({"index": i, "title": item.get("title", ""), "valid": not issues, "issues": issues})
+    return {"checked": len(results), "valid": sum(r["valid"] for r in results), "results": results}
+
+
 def run_compliance_checks(ctx: RunContext) -> dict:
     issues = compliance.checks(ctx)
     return {"issue_count": len(issues), "issues": issues}
@@ -75,7 +93,8 @@ TOOLS: dict[str, Tool] = {t.spec.name: t for t in (
                   description="Read a versioned knowledge pack. Optional query filters entries by title or finding text.",
                   input_schema={"type": "object", "required": ["pack"], "properties": {
                       "pack": {"type": "string", "enum": ["google_assistant_reference", "production_assistants",
-                                                          "customer_themes", "privacy", "distraction", "safety_security"]},
+                                                          "customer_themes", "privacy", "distraction", "safety_security",
+                                                          "vehicle_scenarios"]},
                       "query": {"type": "string"}}}), search_knowledge),
     Tool(ToolSpec(name="get_capability_catalog",
                   description="Cognitive capabilities up to the program's target level, with guidance and companion principles.",
@@ -94,6 +113,17 @@ TOOLS: dict[str, Tool] = {t.spec.name: t for t in (
                   description="Findings and proposals from the latest succeeded run of an upstream agent.",
                   input_schema={"type": "object", "required": ["agent_id"],
                                 "properties": {"agent_id": {"type": "string"}}}), get_dependency_output),
+    Tool(ToolSpec(name="get_vehicle_signals",
+                  description="Vehicle signal catalog (VSS path, VHAL mapping, unit, access, action tier, availability), "
+                              "triggers, and THEN response types. Optional domain filter.",
+                  input_schema={"type": "object", "properties": {"domain": {"type": "string", "enum": [
+                      "vehicle", "energy", "body", "climate", "occupants", "driving", "environment", "connectivity"]}}}),
+         get_vehicle_signals),
+    Tool(ToolSpec(name="check_scenarios",
+                  description="Validate GIVEN/WHEN/THEN scenarios against the catalog and the action tiers before submitting.",
+                  input_schema={"type": "object", "required": ["scenarios"], "properties": {"scenarios": {
+                      "type": "array", "items": {"type": "object", "required": ["scenario"], "properties": {
+                          "title": {"type": "string"}, "scenario": Scenario.model_json_schema()}}}}}), check_scenarios),
     Tool(ToolSpec(name="run_compliance_checks",
                   description="Run the deterministic register checks (attributes, prefixes, verification, ASIL, trace, coverage).",
                   input_schema=_OBJ), run_compliance_checks),

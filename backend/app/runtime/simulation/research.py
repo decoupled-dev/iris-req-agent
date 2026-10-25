@@ -93,3 +93,67 @@ def companion(req):
                f"{len(proposals)} of {len(findings)} capabilities need a requirement ({gaps}).")
     return turn(thinking, [call(req, "submit_result", summary=summary, findings=findings, proposals=proposals,
                                 metrics={"specified_before": cov["specified_level"], "gaps": len(proposals)})])
+
+
+@policy("vehicle_context")
+def vehicle_context(req):
+    cat = result(req, "get_vehicle_signals")
+    kb = result(req, "search_knowledge", pack="vehicle_scenarios")
+    if cat is None or kb is None:
+        return turn("I specify how the companion reacts to the vehicle: GIVEN conditions on catalog signals, WHEN one "
+                    "trigger or utterance, THEN a response that respects the action tiers. I need the signal catalog "
+                    "and the scenario pack.",
+                    [call(req, "get_vehicle_signals"), call(req, "search_knowledge", pack="vehicle_scenarios")])
+
+    drafts = [{"title": e["proposal"]["title"], "scenario": e["proposal"]["scenario"]} for e in kb["entries"]]
+    checked, reg = result(req, "check_scenarios"), result(req, "list_requirements")
+    if checked is None or reg is None:
+        actuators = [s for s in cat["signals"] if s["access"] == "actuator"]
+        high = sum(1 for s in actuators if s.get("tier") == "high-impact")
+        optional = sum(1 for s in cat["signals"] if s.get("availability") == "optional")
+        return turn(f"The catalog ({cat['status']}) has {len(cat['signals'])} signals, {len(actuators)} of them "
+                    f"actuators ({high} high-impact), {optional} optional fitments, and {len(cat['triggers'])} triggers. "
+                    f"I've drafted {len(drafts)} scenarios from the pack. Before submitting I'll validate every one "
+                    f"against the catalog and tiers, and check the register for behaviour already specified.",
+                    [call(req, "check_scenarios", scenarios=drafts), call(req, "list_requirements")])
+
+    existing = {norm(r["title"]) for r in reg["requirements"]}
+    signals = {s["alias"]: s for s in cat["signals"]}
+    source = f"{kb['source']} ({kb['version']})"
+    invalid = {r["index"] for r in checked["results"] if not r["valid"]}
+    findings, proposals, skipped = [], [], 0
+    for i, e in enumerate(kb["entries"]):
+        fid = finding_id(e["key"])
+        findings.append({"id": fid, "title": e["title"], "statement": e["finding"], "source": source,
+                         "confidence": "high"})
+        spec = e["proposal"]
+        if i in invalid:
+            continue
+        if norm(spec["title"]) in existing:
+            skipped += 1
+            continue
+        p = {**spec, "source": fid, "change_note": f"Initial proposal from vehicle_context ({e['key']})"}
+        if p["category"] == "SYS-SAFE":
+            p["asil_note"] = "to be confirmed by the safety manager"
+        proposals.append(p)
+
+    used = {c["signal"] for e in kb["entries"] for c in e["proposal"]["scenario"]["given"]}
+    optional = sorted(a for a in used if signals.get(a, {}).get("availability") == "optional")
+    for alias in optional:
+        findings.append({"id": f"find_fit_{alias}", "title": f"Optional fitment: {alias}",
+                         "statement": f"Scenarios rely on '{signals[alias]['label']}' ({signals[alias]['vss']}), "
+                                      f"which is optional fitment; variants without it need the stated fallback.",
+                         "source": f"{cat['source']} ({cat['version']})", "confidence": "high"})
+    triggers = {e["proposal"]["scenario"]["when"]["trigger"] for e in kb["entries"]}
+    thinking = (f"{checked['valid']} of {checked['checked']} scenarios pass validation"
+                + (f"; {len(invalid)} dropped until fixed" if invalid else "")
+                + f". They use {len(used)} distinct signals and {len(triggers)} of {len(cat['triggers'])} triggers. "
+                  f"{len(optional)} optional-fitment dependencies ({', '.join(optional) or 'none'}) become findings so "
+                  f"variant planning sees them. Each proposal keeps a one-line shall statement with its scenario"
+                + (f"; {skipped} already in the register" if skipped else "") + ".")
+    summary = (f"{len(proposals)} GIVEN/WHEN/THEN requirements from {len(kb['entries'])} vehicle-context scenarios, all "
+               f"validated against {len(cat['signals'])} catalog signals; {len(optional)} optional-fitment dependencies "
+               f"flagged.")
+    return turn(thinking, [call(req, "submit_result", summary=summary, findings=findings, proposals=proposals,
+                                metrics={"scenarios": len(proposals), "signals_used": len(used),
+                                         "triggers_covered": len(triggers)})])

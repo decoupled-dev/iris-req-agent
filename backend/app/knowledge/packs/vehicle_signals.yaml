@@ -1,0 +1,142 @@
+# Reference vehicle signal catalog. Reviewed source: docs/12-vehicle-context.md.
+# VSS = COVESA Vehicle Signal Specification path; "OEM." marks an OEM extension where VSS has no node.
+# VHAL = Android Automotive VehicleProperty, indicative mapping only; "—" where none exists.
+# Replace with the OEM signal database when available. Runtime choice (AAOS or QNX) stays open.
+pack: vehicle_signals
+version: "2026-10-25"
+source: "Knowledge pack: Vehicle signals (reference)"
+status: reference — to be replaced by the OEM signal database
+
+domains:
+  - {id: vehicle, name: Vehicle state}
+  - {id: energy, name: Energy and charging}
+  - {id: body, name: Body and closures}
+  - {id: climate, name: Climate}
+  - {id: occupants, name: Occupants and driver state}
+  - {id: driving, name: Driving context}
+  - {id: environment, name: Environment}
+  - {id: connectivity, name: Connectivity, media and personal}
+
+# access: read | actuator. tier (actuators only): comfort | high-impact | prohibited.
+# family groups per-zone signals so a scenario can target "the speaker's zone".
+signals:
+  # Vehicle state
+  - {alias: ignition_state, label: ignition state, domain: vehicle, vss: Vehicle.LowVoltageSystemState, vhal: IGNITION_STATE, type: enum, enum: ["LOCK", "OFF", "ACC", "ON", "START"], access: read}
+  - {alias: gear, label: selected gear, domain: vehicle, vss: Vehicle.Powertrain.Transmission.SelectedGear, vhal: GEAR_SELECTION, type: enum, enum: [P, R, N, D], access: read}
+  - {alias: vehicle_speed, label: vehicle speed, domain: vehicle, vss: Vehicle.Speed, vhal: PERF_VEHICLE_SPEED, type: float, unit: km/h, range: [0, 250], access: read}
+  - {alias: odometer, label: odometer, domain: vehicle, vss: Vehicle.TraveledDistance, vhal: PERF_ODOMETER, type: float, unit: km, access: read}
+  - {alias: trip_duration, label: time driven this trip, domain: vehicle, vss: OEM.Trip.Duration, vhal: "—", type: int, unit: min, access: read}
+
+  # Energy and charging
+  - {alias: battery_soc, label: battery state of charge, domain: energy, vss: Vehicle.Powertrain.TractionBattery.StateOfCharge.Displayed, vhal: EV_BATTERY_LEVEL, type: float, unit: "%", range: [0, 100], access: read}
+  - {alias: range_remaining, label: remaining range, domain: energy, vss: Vehicle.Powertrain.Range, vhal: RANGE_REMAINING, type: float, unit: km, access: read}
+  - {alias: range_margin_at_destination, label: range left on arrival, domain: energy, vss: OEM.Navigation.RangeAtDestination, vhal: "—", type: float, unit: km, access: read}
+  - {alias: charging_active, label: charging active, domain: energy, vss: Vehicle.Powertrain.TractionBattery.Charging.IsCharging, vhal: EV_CHARGE_STATE, type: bool, access: read}
+  - {alias: charge_cable_connected, label: charge cable connected, domain: energy, vss: Vehicle.Powertrain.TractionBattery.Charging.IsChargingCableConnected, vhal: EV_CHARGE_PORT_CONNECTED, type: bool, access: read}
+
+  # Body and closures
+  - {alias: door_open_driver, family: door_open, zone: driver, label: driver door open, domain: body, vss: Vehicle.Cabin.Door.Row1.DriverSide.IsOpen, vhal: DOOR_POS, type: bool, access: read}
+  - {alias: door_open_passenger, family: door_open, zone: passenger, label: passenger door open, domain: body, vss: Vehicle.Cabin.Door.Row1.PassengerSide.IsOpen, vhal: DOOR_POS, type: bool, access: read}
+  - {alias: door_open_rear_left, family: door_open, zone: rear_left, label: rear-left door open, domain: body, vss: Vehicle.Cabin.Door.Row2.DriverSide.IsOpen, vhal: DOOR_POS, type: bool, access: read}
+  - {alias: door_open_rear_right, family: door_open, zone: rear_right, label: rear-right door open, domain: body, vss: Vehicle.Cabin.Door.Row2.PassengerSide.IsOpen, vhal: DOOR_POS, type: bool, access: read}
+  - {alias: trunk_open, label: trunk open, domain: body, vss: Vehicle.Body.Trunk.Rear.IsOpen, vhal: DOOR_POS, type: bool, access: read}
+  - {alias: window_pos_driver, family: window_pos, zone: driver, label: driver window opening, domain: body, vss: Vehicle.Cabin.Door.Row1.DriverSide.Window.Position, vhal: WINDOW_POS, type: int, unit: "%", range: [0, 100], access: actuator, tier: high-impact}
+  - {alias: window_pos_passenger, family: window_pos, zone: passenger, label: passenger window opening, domain: body, vss: Vehicle.Cabin.Door.Row1.PassengerSide.Window.Position, vhal: WINDOW_POS, type: int, unit: "%", range: [0, 100], access: actuator, tier: high-impact}
+  - {alias: window_pos_rear_left, family: window_pos, zone: rear_left, label: rear-left window opening, domain: body, vss: Vehicle.Cabin.Door.Row2.DriverSide.Window.Position, vhal: WINDOW_POS, type: int, unit: "%", range: [0, 100], access: actuator, tier: high-impact}
+  - {alias: window_pos_rear_right, family: window_pos, zone: rear_right, label: rear-right window opening, domain: body, vss: Vehicle.Cabin.Door.Row2.PassengerSide.Window.Position, vhal: WINDOW_POS, type: int, unit: "%", range: [0, 100], access: actuator, tier: high-impact}
+  - {alias: any_window_open, label: any window open, domain: body, vss: OEM.Body.Windows.AnyOpen, vhal: "—", type: bool, access: read}
+  - {alias: sunroof_pos, label: sunroof opening, domain: body, vss: Vehicle.Cabin.Sunroof.Position, vhal: WINDOW_POS, type: int, unit: "%", range: [0, 100], access: actuator, tier: high-impact}
+  - {alias: doors_locked, label: doors locked, domain: body, vss: Vehicle.Cabin.Door.Row1.DriverSide.IsLocked, vhal: DOOR_LOCK, type: bool, access: actuator, tier: high-impact}
+  - {alias: child_lock, label: rear child lock on, domain: body, vss: Vehicle.Cabin.Door.Row2.DriverSide.IsChildLockActive, vhal: DOOR_CHILD_LOCK_ENABLED, type: bool, access: actuator, tier: high-impact}
+
+  # Climate
+  - {alias: cabin_temp, label: cabin temperature, domain: climate, vss: Vehicle.Cabin.HVAC.AmbientAirTemperature, vhal: HVAC_TEMPERATURE_CURRENT, type: float, unit: °C, access: read}
+  - {alias: setpoint_driver, family: climate_setpoint, zone: driver, label: driver climate setpoint, domain: climate, vss: Vehicle.Cabin.HVAC.Station.Row1.Driver.Temperature, vhal: HVAC_TEMPERATURE_SET, type: float, unit: °C, range: [16, 28], access: actuator, tier: comfort}
+  - {alias: setpoint_passenger, family: climate_setpoint, zone: passenger, label: passenger climate setpoint, domain: climate, vss: Vehicle.Cabin.HVAC.Station.Row1.Passenger.Temperature, vhal: HVAC_TEMPERATURE_SET, type: float, unit: °C, range: [16, 28], access: actuator, tier: comfort}
+  - {alias: setpoint_rear, family: climate_setpoint, zone: rear, label: rear climate setpoint, domain: climate, vss: Vehicle.Cabin.HVAC.Station.Row2.Driver.Temperature, vhal: HVAC_TEMPERATURE_SET, type: float, unit: °C, range: [16, 28], access: actuator, tier: comfort}
+  - {alias: outside_temp, label: outside temperature, domain: climate, vss: Vehicle.Exterior.AirTemperature, vhal: ENV_OUTSIDE_TEMPERATURE, type: float, unit: °C, access: read}
+  - {alias: cabin_humidity, label: cabin humidity, domain: climate, vss: OEM.Cabin.HVAC.Humidity, vhal: "—", type: float, unit: "%", access: read}
+  - {alias: sun_load, label: sun load, domain: climate, vss: OEM.Cabin.SunLoad, vhal: "—", type: float, unit: W/m², access: read}
+  - {alias: ac_on, label: air conditioning on, domain: climate, vss: Vehicle.Cabin.HVAC.IsAirConditioningActive, vhal: HVAC_AC_ON, type: bool, access: actuator, tier: comfort}
+  - {alias: fan_speed, label: fan speed, domain: climate, vss: Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed, vhal: HVAC_FAN_SPEED, type: int, unit: "%", range: [0, 100], access: actuator, tier: comfort}
+  - {alias: recirculation, label: recirculation on, domain: climate, vss: Vehicle.Cabin.HVAC.IsRecirculationActive, vhal: HVAC_RECIRC_ON, type: bool, access: actuator, tier: comfort}
+  - {alias: front_defrost, label: windshield defrost on, domain: climate, vss: Vehicle.Cabin.HVAC.IsFrontDefrosterActive, vhal: HVAC_DEFROSTER, type: bool, access: actuator, tier: comfort}
+  - {alias: windshield_fog, label: windshield fogging, domain: climate, vss: OEM.Body.Windshield.FogDetected, vhal: "—", type: bool, access: read, availability: optional}
+  - {alias: seat_climate_driver, family: seat_climate, zone: driver, label: driver seat heating/ventilation, domain: climate, vss: Vehicle.Cabin.Seat.Row1.DriverSide.HeatingCooling, vhal: HVAC_SEAT_TEMPERATURE, type: int, unit: "%", range: [-100, 100], access: actuator, tier: comfort}
+  - {alias: seat_climate_passenger, family: seat_climate, zone: passenger, label: passenger seat heating/ventilation, domain: climate, vss: Vehicle.Cabin.Seat.Row1.PassengerSide.HeatingCooling, vhal: HVAC_SEAT_TEMPERATURE, type: int, unit: "%", range: [-100, 100], access: actuator, tier: comfort}
+  - {alias: seat_climate_rear_left, family: seat_climate, zone: rear_left, label: rear-left seat heating, domain: climate, vss: Vehicle.Cabin.Seat.Row2.DriverSide.HeatingCooling, vhal: HVAC_SEAT_TEMPERATURE, type: int, unit: "%", range: [0, 100], access: actuator, tier: comfort, availability: optional}
+  - {alias: seat_climate_rear_right, family: seat_climate, zone: rear_right, label: rear-right seat heating, domain: climate, vss: Vehicle.Cabin.Seat.Row2.PassengerSide.HeatingCooling, vhal: HVAC_SEAT_TEMPERATURE, type: int, unit: "%", range: [0, 100], access: actuator, tier: comfort, availability: optional}
+  - {alias: steering_heat, label: steering wheel heating on, domain: climate, vss: OEM.Cabin.SteeringWheel.Heating, vhal: HVAC_STEERING_WHEEL_HEAT, type: bool, access: actuator, tier: comfort, availability: optional}
+
+  # Occupants and driver state
+  - {alias: seat_occupied_driver, family: seat_occupied, zone: driver, label: driver seat occupied, domain: occupants, vss: Vehicle.Cabin.Seat.Row1.DriverSide.IsOccupied, vhal: "—", type: bool, access: read}
+  - {alias: seat_occupied_passenger, family: seat_occupied, zone: passenger, label: passenger seat occupied, domain: occupants, vss: Vehicle.Cabin.Seat.Row1.PassengerSide.IsOccupied, vhal: "—", type: bool, access: read}
+  - {alias: seat_occupied_rear_left, family: seat_occupied, zone: rear_left, label: rear-left seat occupied, domain: occupants, vss: Vehicle.Cabin.Seat.Row2.DriverSide.IsOccupied, vhal: "—", type: bool, access: read}
+  - {alias: seat_occupied_rear_right, family: seat_occupied, zone: rear_right, label: rear-right seat occupied, domain: occupants, vss: Vehicle.Cabin.Seat.Row2.PassengerSide.IsOccupied, vhal: "—", type: bool, access: read}
+  - {alias: rear_occupant_detected, label: rear occupant detected (radar), domain: occupants, vss: OEM.Cabin.ChildPresenceDetection.Detected, vhal: "—", type: bool, access: read, availability: optional, privacy: personal}
+  - {alias: seatbelt_driver, family: seatbelt, zone: driver, label: driver seatbelt fastened, domain: occupants, vss: Vehicle.Cabin.Seat.Row1.DriverSide.IsBelted, vhal: SEAT_BELT_BUCKLED, type: bool, access: read}
+  - {alias: seatbelt_passenger, family: seatbelt, zone: passenger, label: passenger seatbelt fastened, domain: occupants, vss: Vehicle.Cabin.Seat.Row1.PassengerSide.IsBelted, vhal: SEAT_BELT_BUCKLED, type: bool, access: read}
+  - {alias: seatbelt_rear_left, family: seatbelt, zone: rear_left, label: rear-left seatbelt fastened, domain: occupants, vss: Vehicle.Cabin.Seat.Row2.DriverSide.IsBelted, vhal: SEAT_BELT_BUCKLED, type: bool, access: read}
+  - {alias: seatbelt_rear_right, family: seatbelt, zone: rear_right, label: rear-right seatbelt fastened, domain: occupants, vss: Vehicle.Cabin.Seat.Row2.PassengerSide.IsBelted, vhal: SEAT_BELT_BUCKLED, type: bool, access: read}
+  - {alias: speaker_seat, label: speaking seat, domain: occupants, vss: OEM.Cabin.Voice.SpeakerZone, vhal: "—", type: enum, enum: [driver, passenger, rear_left, rear_right, unknown], access: read}
+  - {alias: speaker_confidence, label: speaker attribution confidence, domain: occupants, vss: OEM.Cabin.Voice.SpeakerZoneConfidence, vhal: "—", type: float, range: [0, 1], access: read}
+  - {alias: driver_drowsiness, label: driver drowsiness level, domain: occupants, vss: Vehicle.Driver.FatigueLevel, vhal: DRIVER_DROWSINESS_ATTENTION_STATE, type: enum, enum: [alert, slightly_drowsy, drowsy], access: read, availability: optional, privacy: biometric}
+  - {alias: driver_distraction, label: driver distraction level, domain: occupants, vss: Vehicle.Driver.DistractionLevel, vhal: DRIVER_DISTRACTION_STATE, type: enum, enum: [attentive, distracted], access: read, availability: optional, privacy: biometric}
+  - {alias: active_profile, label: active occupant profile, domain: occupants, vss: OEM.Assistant.ActiveProfile, vhal: "—", type: string, access: read, privacy: personal}
+  - {alias: affect_awareness_enabled, label: affect awareness enabled, domain: occupants, vss: OEM.Assistant.Settings.AffectAwareness, vhal: "—", type: bool, access: read}
+
+  # Driving context
+  - {alias: driver_workload, label: driver workload, domain: driving, vss: OEM.Assistant.DriverWorkload, vhal: "—", type: enum, enum: [low, medium, high], access: read, note: derived from manoeuvre, speed band, guidance and calls (COG-03)}
+  - {alias: turn_signal, label: turn signal, domain: driving, vss: Vehicle.Body.Lights.DirectionIndicator.State, vhal: TURN_SIGNAL_STATE, type: enum, enum: [none, left, right], access: read}
+  - {alias: nav_guidance_active, label: route guidance active, domain: driving, vss: OEM.Navigation.GuidanceActive, vhal: "—", type: bool, access: read}
+  - {alias: next_manoeuvre_distance, label: distance to next manoeuvre, domain: driving, vss: OEM.Navigation.NextManeuverDistance, vhal: "—", type: float, unit: m, access: read}
+  - {alias: nav_destination_set, label: destination set, domain: driving, vss: OEM.Navigation.DestinationSet, vhal: "—", type: bool, access: read}
+  - {alias: nav_eta, label: time to destination, domain: driving, vss: OEM.Navigation.TimeToDestination, vhal: "—", type: int, unit: min, access: read}
+  - {alias: adas_cruise_active, label: adaptive cruise active, domain: driving, vss: Vehicle.ADAS.CruiseControl.IsActive, vhal: CRUISE_CONTROL_ENABLED, type: bool, access: actuator, tier: prohibited}
+  - {alias: adas_lane_keep_active, label: lane keeping active, domain: driving, vss: Vehicle.ADAS.LaneDepartureDetection.IsEnabled, vhal: LANE_KEEP_ASSIST_ENABLED, type: bool, access: actuator, tier: prohibited}
+
+  # Environment
+  - {alias: rain_intensity, label: rain intensity, domain: environment, vss: Vehicle.Body.Raindetection.Intensity, vhal: "—", type: int, unit: "%", range: [0, 100], access: read}
+  - {alias: ambient_light, label: ambient light, domain: environment, vss: Vehicle.Exterior.LightIntensity, vhal: "—", type: float, unit: "%", access: read}
+  - {alias: location, label: vehicle location, domain: environment, vss: Vehicle.CurrentLocation, vhal: "—", type: geo, access: read, privacy: personal}
+  - {alias: local_time, label: local time, domain: environment, vss: OEM.Clock.LocalTime, vhal: "—", type: time, access: read}
+  - {alias: rain_forecast_probability, label: rain probability next hour, domain: environment, vss: OEM.Cloud.Weather.RainProbability, vhal: "—", type: int, unit: "%", access: read, note: cloud; unavailable offline}
+
+  # Connectivity, media and personal
+  - {alias: network_available, label: network available, domain: connectivity, vss: OEM.Connectivity.IsAvailable, vhal: "—", type: bool, access: read}
+  - {alias: phone_connected, label: phone connected, domain: connectivity, vss: OEM.Connectivity.Phone.IsConnected, vhal: "—", type: bool, access: read}
+  - {alias: call_state, label: call state, domain: connectivity, vss: OEM.Telephony.CallState, vhal: "—", type: enum, enum: [idle, ringing, active], access: read}
+  - {alias: media_state, label: media playback, domain: connectivity, vss: OEM.Media.State, vhal: "—", type: enum, enum: [stopped, playing, paused], access: read}
+  - {alias: media_volume, label: media volume, domain: connectivity, vss: Vehicle.Cabin.Infotainment.Media.Volume, vhal: "—", type: int, unit: "%", range: [0, 100], access: actuator, tier: comfort}
+  - {alias: calendar_next_event, label: time to next calendar event, domain: connectivity, vss: OEM.Cloud.Calendar.NextEventIn, vhal: "—", type: int, unit: min, access: read, privacy: personal}
+  - {alias: memory_climate_preference, label: remembered climate preference, domain: connectivity, vss: OEM.Assistant.Memory.ClimatePreference, vhal: "—", type: float, unit: °C, access: read, privacy: personal}
+  - {alias: ecall_state, label: emergency call state, domain: connectivity, vss: OEM.Telematics.ECall.State, vhal: "—", type: enum, enum: [idle, active], access: actuator, tier: high-impact}
+
+# stationary: the trigger implies the vehicle is not moving, so spoken output needs no workload condition.
+triggers:
+  - {id: UTTERANCE, kind: utterance, label: occupant speaks to the assistant, source: speech path}
+  - {id: IGN_ON, kind: vehicle_event, stationary: true, label: ignition switched on, source: ignition_state}
+  - {id: IGN_OFF, kind: vehicle_event, stationary: true, label: ignition switched off, source: ignition_state}
+  - {id: DOOR_OPEN, kind: vehicle_event, stationary: true, label: a door opens, source: door_open}
+  - {id: DOOR_CLOSE, kind: vehicle_event, stationary: true, label: a door closes, source: door_open}
+  - {id: SEAT_OCCUPIED, kind: vehicle_event, stationary: true, label: a seat becomes occupied, source: seat_occupied}
+  - {id: GEAR_PARK, kind: vehicle_event, stationary: true, label: gear changes to P, source: gear}
+  - {id: CHARGING_STARTED, kind: vehicle_event, stationary: true, label: charging starts, source: charging_active}
+  - {id: RAIN_DETECTED, kind: vehicle_event, label: rain sensor reports rain, source: rain_intensity}
+  - {id: INCOMING_CALL, kind: vehicle_event, label: phone call rings, source: call_state}
+  - {id: DESTINATION_REACHED, kind: vehicle_event, label: route guidance reports arrival, source: nav_guidance_active}
+  - {id: THERMAL_DEVIATION_SUSTAINED, kind: derived, label: cabin temperature far from setpoint for a sustained period, source: "cabin_temp, setpoint_driver"}
+  - {id: LOW_RANGE, kind: derived, label: range on arrival below the reserve threshold, source: range_margin_at_destination}
+  - {id: WINDSHIELD_FOG, kind: derived, label: windshield fogging detected, source: windshield_fog}
+  - {id: DROWSINESS_DETECTED, kind: derived, label: driver-monitoring reports drowsiness, source: driver_drowsiness}
+  - {id: LONG_DRIVE, kind: derived, label: continuous driving exceeds the break interval, source: trip_duration}
+  - {id: CALENDAR_DEPARTURE, kind: derived, label: time to leave for the next calendar event, source: calendar_next_event}
+
+responses:
+  - {type: ACT, label: Act, rule: Execute a comfort-tier action and say what was done; undoable by voice}
+  - {type: CONFIRM_THEN_ACT, label: Confirm then act, rule: Ask a yes/no question and act only on explicit confirmation; required for high-impact actions}
+  - {type: ASK, label: Ask, rule: Ask a clarifying question (which seat, which option) before doing anything}
+  - {type: SUGGEST, label: Suggest, rule: Offer an action and name the signal that triggered it; dismissible}
+  - {type: INFORM, label: Inform, rule: Tell the occupant a fact grounded in a signal; no action}
+  - {type: DEFER, label: Defer, rule: Hold non-urgent speech until driver workload is low}
+  - {type: REFUSE, label: Refuse, rule: Decline a prohibited function and explain why}

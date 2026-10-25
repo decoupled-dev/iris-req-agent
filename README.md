@@ -15,6 +15,7 @@ The specification describes an in-vehicle assistant that can:
 - Plan multi-step tasks and confirm before side effects
 - Keep a consistent persona, converse openly within honesty boundaries, and — opt-in — notice frustration or fatigue
 - Control or report car-domain functions (climate, media, navigation, calls, limited body controls)
+- React to the vehicle: 76 reference signals and 17 triggers (IGN_ON, DOOR_OPEN, rain, low range, …), with behaviour specified as GIVEN / WHEN / THEN
 - Meet privacy, AI-regulation, driver-distraction, functional-safety, AI-safety, and cybersecurity constraints
 
 ### Cognitive levels
@@ -51,11 +52,12 @@ The workbench will:
 | 2 | OEM feature research | Features of production assistants (MBUX, BMW, Tesla, and others) |
 | 3 | Customer expectations | Complaint and expectation themes from maintained source packs |
 | 4 | Companion cognition | `SYS-COG` requirements for each cognitive capability up to the target level |
-| 5 | Requirements synthesis | `shall` statements from the four research outputs |
-| 6 | GDPR and privacy | Recording, passengers, consent, minimization, retention, memory, AI Act |
-| 7 | Driver distraction | Dialogue length, lockouts, eyes-off-road, workload-aware timing |
-| 8 | Safety and cybersecurity | Preliminary ASIL, action tiers, ISO 26262, ISO 21448, ISO/PAS 8800, ISO 21434, UN R155/R156 |
-| 9 | Compliance gate | Missing attributes, conflicts, traceability gaps, cognitive coverage and level |
+| 5 | Vehicle context | GIVEN / WHEN / THEN behaviour over the vehicle signal catalog |
+| 6 | Requirements synthesis | `shall` statements from the five research outputs |
+| 7 | GDPR and privacy | Recording, passengers, consent, minimization, retention, memory, AI Act |
+| 8 | Driver distraction | Dialogue length, lockouts, eyes-off-road, workload-aware timing |
+| 9 | Safety and cybersecurity | Preliminary ASIL, action tiers, ISO 26262, ISO 21448, ISO/PAS 8800, ISO 21434, UN R155/R156 |
+| 10 | Compliance gate | Missing attributes, conflicts, traceability gaps, cognitive coverage and level, scenario rules |
 
 Research agents run in parallel. Synthesis waits for them. The three assurance agents wait for synthesis. The compliance gate runs last. Rerunning one agent reuses the latest saved outputs of the others.
 
@@ -73,7 +75,7 @@ See [docs/04-requirements.md](docs/04-requirements.md) and [docs/05-pipeline.md]
 
 The supplier handoff is the baselined set plus accepted drafts.
 
-- **Excel** — Requirements, Traceability, Cognitive coverage, Open items, Run log
+- **Excel** — Requirements, Traceability, Cognitive coverage, Scenarios, Vehicle signals, Open items, Run log
 - **Word** — SEW1 system requirements specification
 
 See [docs/06-export.md](docs/06-export.md).
@@ -93,6 +95,7 @@ See [docs/06-export.md](docs/06-export.md).
 | [docs/09-cognitive-companion.md](docs/09-cognitive-companion.md) | Cognitive levels, capability catalog, companion principles, coverage rule |
 | [docs/10-plan.md](docs/10-plan.md) | Specification releases and workbench milestones |
 | [docs/11-agent-runtime.md](docs/11-agent-runtime.md) | Agent loop, tools, trace events, simulated provider, swapping in a real model |
+| [docs/12-vehicle-context.md](docs/12-vehicle-context.md) | Vehicle signal catalog, triggers, responses, GIVEN / WHEN / THEN behaviour |
 
 ## Layout
 

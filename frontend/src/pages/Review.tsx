@@ -3,6 +3,7 @@ import { Check, CheckCheck, Inbox, Pencil, Search, X } from "lucide-react";
 import { api, InboxItem } from "../api";
 import { usePoll } from "../hooks";
 import { Button, CategoryTag, Chip, Empty, Field, Kbd, PageHeader, Segmented } from "../components/ui";
+import Scenario from "../components/Scenario";
 
 const AGENT_LABEL: Record<string, string> = {
   requirements_synthesis: "Synthesis",
@@ -11,12 +12,12 @@ const AGENT_LABEL: Record<string, string> = {
   safety_cybersecurity: "Safety & security",
 };
 
-export default function Review() {
+export default function Review({ initial = null }: { initial?: number | null }) {
   const inbox = usePoll(api.inbox, 4000);
   const findings = usePoll(api.findings, 0);
   const [agent, setAgent] = useState("all");
   const [q, setQ] = useState("");
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<number | null>(initial);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +101,7 @@ export default function Review() {
                   <div className="rl-top">
                     <CategoryTag category={i.proposal.category} />
                     {i.proposal.id && <span className="rl-update">Update {i.proposal.id}</span>}
+                    {i.proposal.scenario && <span className="gwt-badge" title="Has a GIVEN/WHEN/THEN scenario">GWT</span>}
                     <span className="rl-agent">{AGENT_LABEL[i.agent_id]}</span>
                   </div>
                   <div className="rl-title">{i.proposal.title}</div>
@@ -144,6 +146,13 @@ function Detail({ item, findings, editing, draft, setDraft, setEditing, accept, 
         )}
         {!editing && <button className="link-btn" onClick={() => setEditing(true)}><Pencil size={12} /> Edit before accepting</button>}
       </div>
+
+      {p.scenario && (
+        <div className="rd-gwt">
+          <div className="field-label">Behaviour specification</div>
+          <Scenario scenario={p.scenario} />
+        </div>
+      )}
 
       <div className="rd-grid">
         <Field label="Rationale">{p.rationale}</Field>

@@ -6,8 +6,8 @@ Two tracks run together. The **specification track** grows the SEW1 baseline unt
 
 | Release | Specified level | Content | Exit criteria |
 | --- | --- | --- | --- |
-| S1 | CL2 Situated | Core dialogue, vehicle grounding, seat attribution, action tiers, offline behaviour; privacy, distraction, and safety baselines for those | Gate reports CL2; every `SYS-SAFE` item has a preliminary ASIL awaiting confirmation; no open gate finding of kind *conflict* |
-| S2 | CL4 Proactive partner | Personal memory and learning, proactive suggestions, workload-aware timing, task planning, explanations | Gate reports CL4; COG-08 and COG-19 items reviewed by privacy; COG-13 items reviewed by distraction |
+| S1 | CL2 Situated | Core dialogue, vehicle grounding, seat attribution, action tiers, offline behaviour; the vehicle signal catalog replaced by the OEM signal database; utterance and vehicle-event scenarios; privacy, distraction, and safety baselines for those | Gate reports CL2; every `SYS-SAFE` item has a preliminary ASIL awaiting confirmation; no open gate finding of kind *conflict* |
+| S2 | CL4 Proactive partner | Personal memory and learning, proactive suggestions, workload-aware timing, task planning, explanations; derived-trigger scenarios (low range, sustained discomfort, long drive) | Gate reports CL4; COG-08 and COG-19 items reviewed by privacy; COG-13 items reviewed by distraction |
 | S3 | CL5 Companion | Episodic recall, persona, opt-in affect and fatigue awareness, open conversation within the companion principles | Gate reports CL5; COG-16 and COG-17 items closed by privacy and AI-regulation review or recorded as open points in the Word export |
 
 Each release ends with an export issued to the supplier. Later releases add versions; they do not reset the register.
@@ -37,5 +37,6 @@ Each release ends with an export issued to the supplier. Later releases add vers
 | CL5 affect features blocked by regulation in some markets | Keep COG-16 opt-in and severable; gate reports CL5 coverage separately from market approval |
 | “Companion” drifts into engagement optimization | Companion principles are a gate checklist item for every `SYS-COG` proposal |
 | Agents produce plausible but unsourced requirements | Proposals without finding IDs are rejected by the API; the gate flags empty sources |
+| Reference signal catalog diverges from the OEM signal database | Scenarios name signals by alias; replacing the catalog re-validates every scenario through the gate, so mismatches surface as findings |
 | Proactive behaviour raises distraction | COG-12 always ships with COG-13; the gate flags a COG-12 item with no linked `SYS-DIST` item |
 | Latency targets set too early | Performance values are proposals marked “to be confirmed” until the speech path is selected |

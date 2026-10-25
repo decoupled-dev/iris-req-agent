@@ -1,10 +1,11 @@
-import { Boxes, Brain, Download, FileText, History, Inbox, Workflow } from "lucide-react";
+import { Boxes, Brain, Download, FileText, Gauge, History, Inbox, Workflow } from "lucide-react";
 import { api } from "./api";
 import { useHashRoute, usePoll } from "./hooks";
 import Pipeline from "./pages/Pipeline";
 import Review from "./pages/Review";
 import Requirements from "./pages/Requirements";
 import Cognition from "./pages/Cognition";
+import Signals from "./pages/Signals";
 import Runs from "./pages/Runs";
 import Export from "./pages/Export";
 
@@ -13,6 +14,7 @@ const NAV = [
   { id: "review", label: "Review", icon: Inbox },
   { id: "requirements", label: "Requirements", icon: FileText },
   { id: "cognition", label: "Cognitive coverage", icon: Brain },
+  { id: "signals", label: "Vehicle signals", icon: Gauge },
   { id: "runs", label: "Run log", icon: History },
   { id: "export", label: "Export", icon: Download },
 ];
@@ -22,11 +24,13 @@ export default function App() {
   const { data: ov } = usePoll(api.overview, 3000);
   const { data: rt } = usePoll(api.runtime, 0);
 
+  const [base, param] = route.split("/");
   const page = (() => {
-    switch (route) {
-      case "review": return <Review />;
+    switch (base) {
+      case "review": return <Review initial={param ? Number(param) : null} />;
       case "requirements": return <Requirements />;
       case "cognition": return <Cognition />;
+      case "signals": return <Signals />;
       case "runs": return <Runs />;
       case "export": return <Export />;
       default: return <Pipeline go={go} />;
@@ -45,7 +49,7 @@ export default function App() {
         </div>
         <nav>
           {NAV.map(({ id, label, icon: Icon }) => (
-            <a key={id} href={`#/${id}`} className={route === id || (route === "" && id === "pipeline") ? "active" : ""}>
+            <a key={id} href={`#/${id}`} className={base === id ? "active" : ""}>
               <Icon size={16} />
               <span>{label}</span>
               {id === "review" && !!ov?.inbox && <span className="nav-badge">{ov.inbox}</span>}

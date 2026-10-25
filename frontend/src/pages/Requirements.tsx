@@ -4,6 +4,7 @@ import { api, Requirement } from "../api";
 import { usePoll } from "../hooks";
 import { relative } from "../format";
 import { CategoryTag, Chip, Drawer, Empty, Field, PageHeader, StateBadge } from "../components/ui";
+import Scenario from "../components/Scenario";
 
 const CATEGORIES = ["STK", "SYS-FUNC", "SYS-PERF", "SYS-HMI", "SYS-COG", "SYS-SAFE", "SYS-SEC", "SYS-PRIV", "SYS-DIST"];
 const STATES = ["Draft", "In Review", "Baselined"];
@@ -14,18 +15,20 @@ export default function Requirements() {
   const [cat, setCat] = useState("");
   const [state, setState] = useState("");
   const [open, setOpen] = useState<Requirement | null>(null);
+  const [gwt, setGwt] = useState(false);
 
   const rows = useMemo(() => (reqs.data ?? []).filter((r) =>
     r.state !== "Superseded" && (!cat || r.category === cat) && (!state || r.state === state)
-    && `${r.id} ${r.title} ${r.statement} ${r.cognitive_capability.join(" ")}`.toLowerCase().includes(q.toLowerCase())),
-  [reqs.data, q, cat, state]);
+    && (!gwt || !!r.scenario)
+    && `${r.id} ${r.title} ${r.statement} ${r.cognitive_capability.join(" ")} ${r.scenario ? r.scenario.when.trigger + " " + r.scenario.given.map((c) => c.signal).join(" ") : ""}`.toLowerCase().includes(q.toLowerCase())),
+  [reqs.data, q, cat, state, gwt]);
 
   return (
     <>
       <PageHeader title="Requirements" subtitle="The register is the system of record. Agents never overwrite baselined text." />
       <div className="card">
         <div className="toolbar">
-          <div className="search"><Search size={14} /><input placeholder="Search ID, title, statement, COG-xx" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+          <div className="search"><Search size={14} /><input placeholder="Search ID, title, COG-xx, signal, trigger" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <select value={cat} onChange={(e) => setCat(e.target.value)}>
             <option value="">All categories</option>
             {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
@@ -34,6 +37,7 @@ export default function Requirements() {
             <option value="">All states</option>
             {STATES.map((s) => <option key={s}>{s}</option>)}
           </select>
+          <label className="check"><input type="checkbox" checked={gwt} onChange={(e) => setGwt(e.target.checked)} /> GIVEN/WHEN/THEN only</label>
           <span className="toolbar-count">{rows.length} items</span>
         </div>
         {rows.length === 0 ? (
@@ -42,7 +46,7 @@ export default function Requirements() {
           <div className="table-wrap">
             <table className="table">
               <thead>
-                <tr><th>ID</th><th>Title</th><th>Category</th><th>State</th><th>Priority</th><th>Capability</th><th className="num">Ver.</th><th>Updated</th></tr>
+                <tr><th>ID</th><th>Title</th><th>Category</th><th>State</th><th>Priority</th><th>Capability</th><th>Spec</th><th className="num">Ver.</th><th>Updated</th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
@@ -53,6 +57,7 @@ export default function Requirements() {
                     <td><StateBadge state={r.state} /></td>
                     <td>{r.priority}</td>
                     <td>{r.cognitive_capability.map((c) => <Chip key={c} tone="accent">{c}</Chip>)}</td>
+                    <td>{r.scenario ? <span className="gwt-badge" title={`WHEN ${r.scenario.when.trigger}`}>GWT</span> : <span className="muted">—</span>}</td>
                     <td className="num">{r.version}</td>
                     <td className="muted nowrap">{relative(r.updated_at)}</td>
                   </tr>
@@ -76,6 +81,7 @@ function RequirementDetail({ req }: { req: Requirement }) {
     <div className="detail">
       <div className="rd-tags"><CategoryTag category={req.category} /><StateBadge state={req.state} /><Chip>{req.priority}</Chip><Chip>v{req.version}</Chip></div>
       <p className="detail-statement">{req.statement}</p>
+      {req.scenario && <div className="rd-gwt"><div className="field-label">Behaviour specification</div><Scenario scenario={req.scenario} /></div>}
       <Field label="Rationale">{req.rationale}</Field>
       <Field label="Acceptance criteria">{req.acceptance_criteria || "—"}</Field>
       <Field label="Verification method">{req.verification_method || "—"}</Field>

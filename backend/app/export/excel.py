@@ -41,6 +41,14 @@ def build(h: Handoff) -> bytes:
     ws.insert_rows(1)
     ws["A1"] = f"Target {h.target_level}; specified {h.specified_level}"
     ws["A1"].font = Font(bold=True)
+    _sheet(wb, "Scenarios", ["Requirement ID", "Title", "State", "Given", "When", "Then", "Signals", "Cognitive capability"],
+           [[s["requirement"].id, s["requirement"].title, str(s["requirement"].state), s["given"], s["when"], s["then"],
+             ", ".join(s["signals"]), ", ".join(s["requirement"].cognitive_capability)] for s in h.scenarios])
+    _sheet(wb, "Vehicle signals", ["Alias", "Label", "Domain", "VSS path", "VHAL property", "Type", "Unit", "Access",
+                                   "Action tier", "Availability", "Privacy", "Used by"],
+           [[s["alias"], s["label"], s["domain"], s["vss"], s["vhal"], s["type"], s.get("unit", ""), s["access"],
+             s.get("tier", ""), s.get("availability", "standard"), s.get("privacy", "none"), ", ".join(s["used_by"])]
+            for s in h.signals])
     _sheet(wb, "Open items", ["Kind", "ID", "State", "Summary", "Owner hint"],
            [[o["kind"], o["id"], str(o["state"]), o["summary"], o["owner"]] for o in h.open_items])
     _sheet(wb, "Run log", ["Run ID", "Agent", "Mode", "Provider", "Model", "Turns", "Input tokens", "Output tokens",

@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 
 from . import config, db, register
 from .agents import AGENTS, STAGES, stage_agents
+from .agents.bedrock import BedrockHarnessAgent
 from .agents.remote import RemoteAgent
 from .models import AgentResult, Proposal, RunContext, RunStatus
 from .runtime import events
@@ -100,6 +101,8 @@ class Orchestrator:
             if cfg.get("mode") == "remote":
                 emit("start", {"provider": "remote", "endpoint": cfg["endpoint"]})
                 result = RemoteAgent(agent_id, cfg["endpoint"], cfg.get("auth_env")).run(ctx, cancel)
+            elif cfg.get("mode") == "bedrock":
+                result = BedrockHarnessAgent(agent, cfg).run(ctx, cancel, emit, rt.get("max_turns", 12))
             else:
                 result = run_agent(agent, ctx, get_provider(rt), cfg.get("model", rt.get("model", "")), emit,
                                    cancel, rt.get("max_turns", 12))

@@ -4,14 +4,15 @@ from __future__ import annotations
 
 from . import call, norm, policy, result, turn
 
-RESEARCH = ("google_assistant_reference", "oem_feature_research", "customer_expectations", "companion_cognition")
+RESEARCH = ("google_assistant_reference", "oem_feature_research", "customer_expectations", "companion_cognition",
+            "vehicle_context")
 
 
 @policy("requirements_synthesis")
 def synthesis(req):
     outputs = {a: result(req, "get_dependency_output", agent_id=a) for a in RESEARCH}
     if any(v is None for v in outputs.values()):
-        return turn("I merge the four research outputs into one coherent set. Fetching all of them in parallel.",
+        return turn("I merge the five research outputs into one coherent set. Fetching all of them in parallel.",
                     [call(req, "get_dependency_output", agent_id=a) for a, v in outputs.items() if v is None])
     reg, inbox = result(req, "list_requirements"), result(req, "list_open_proposals")
     candidates = [p for o in outputs.values() for p in o["proposals"]]
@@ -30,6 +31,7 @@ def synthesis(req):
             m["source"] = ",".join(dict.fromkeys(m["source"].split(",") + p["source"].split(",")))
             m["cognitive_capability"] = sorted({*m.get("cognitive_capability", []), *p.get("cognitive_capability", [])})
             m["standard_references"] = list(dict.fromkeys(m.get("standard_references", []) + p.get("standard_references", [])))
+            m["scenario"] = m.get("scenario") or p.get("scenario")
         else:
             merged[key] = dict(p)
     existing = {norm(r["title"]): r for r in reg["requirements"]}
@@ -50,10 +52,12 @@ def synthesis(req):
             p = {**p, "id": "", "change_note": "New requirement from synthesis"}
         out.append(p)
     dupes = len(candidates) - len(merged)
+    with_scn = sum(1 for p in out if p.get("scenario"))
     thinking = (f"Merged by behaviour title: {dupes} duplicate{'s' if dupes != 1 else ''} folded, keeping every "
                 f"source and capability ID on the surviving item. {unchanged} already match the register verbatim, "
                 f"{pending} are already in the inbox, {updates} change an existing item and go in as new versions "
-                f"under the same ID. Publishing {len(out)} to the inbox.")
+                f"under the same ID. {with_scn} of them carry a GIVEN/WHEN/THEN scenario, which I keep "
+                f"unchanged. Publishing {len(out)} to the inbox.")
     summary = (f"Merged {len(candidates)} research candidates into {len(merged)}. Published {len(out)} "
                f"({updates} updates); {unchanged} already in the register, {pending} already awaiting review.")
     return turn(thinking, [call(req, "submit_result", summary=summary, findings=[], proposals=out,

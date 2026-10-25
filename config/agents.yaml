@@ -28,7 +28,10 @@ agents:
   customer_expectations:
     mode: local
   companion_cognition:
-    mode: local
+    mode: bedrock
+    harness_arn: arn:aws:bedrock-agentcore:ap-southeast-2:825457798894:harness/CompanionCognition-6M6lAgDhf6
+    region: ap-southeast-2
+    qualifier: DEFAULT
   requirements_synthesis:
     mode: local
   gdpr_privacy:

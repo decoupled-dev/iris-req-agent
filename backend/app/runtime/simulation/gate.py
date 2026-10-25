@@ -18,6 +18,7 @@ def gate(req):
     by_check = Counter(i["check"] for i in issues)
     by_sev = Counter(i["severity"] for i in issues)
     uncovered = [i["ref"] for i in issues if i["check"] == "coverage"]
+    scenario_issues = [i for i in issues if i["check"].startswith("scenario")]
     findings = [{"id": f"gate_{n:03d}", "title": i["title"], "statement": i["detail"],
                  "source": f"compliance_gate check: {i['check']}", "confidence": i["severity"]}
                 for n, i in enumerate(issues, 1)]
@@ -25,6 +26,7 @@ def gate(req):
     thinking = (f"{len(issues)} issues ({breakdown}). Specified level {cov['specified_level']} against target "
                 f"{cov['target_level']}." + (f" {by_sev['critical']} critical issues block a supplier export."
                                              if by_sev["critical"] else "")
+                + (f" {len(scenario_issues)} concern GIVEN/WHEN/THEN scenarios." if scenario_issues else "")
                 + " Each issue becomes an open finding; coverage gaps name the capability so the companion agent "
                   "can close them on the next cycle.")
     summary = (f"Specified cognitive level {cov['specified_level']} of target {cov['target_level']}. "
@@ -32,4 +34,5 @@ def gate(req):
                + (f", {by_sev['critical']} critical" if by_sev["critical"] else "") + ").")
     return turn(thinking, [call(req, "submit_result", summary=summary, findings=findings, proposals=[], metrics={
         "specified_cognitive_level": cov["specified_level"], "target_cognitive_level": cov["target_level"],
-        "uncovered": uncovered, "by_check": dict(by_check), "by_severity": dict(by_sev)})])
+        "uncovered": uncovered, "by_check": dict(by_check), "by_severity": dict(by_sev),
+        "scenario_issues": len(scenario_issues)})])

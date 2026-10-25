@@ -21,7 +21,7 @@ def accept_all(state=State.draft):
 def test_full_cycle_produces_inbox_and_gate_level():
     o = Orchestrator()
     run_ids = o.run_cycle()
-    assert len(run_ids) == 9
+    assert len(run_ids) == 10
     assert all(r["status"] == RunStatus.succeeded for r in orch.runs())
     inbox = register.proposals("open")
     assert inbox and {p["agent_id"] for p in inbox} <= {
@@ -87,15 +87,15 @@ def test_api_and_exports():
     o.run_cycle()
     accept_all()
     with TestClient(app) as client:
-        assert len(client.get("/api/agents").json()) == 9
+        assert len(client.get("/api/agents").json()) == 10
         assert client.get("/api/cognition").json()["specified"] == "CL5"
         xlsx = client.get("/api/export/excel")
         assert xlsx.status_code == 200
         wb = load_workbook(BytesIO(xlsx.content))
-        assert wb.sheetnames == ["Requirements", "Traceability", "Cognitive coverage", "Open items", "Run log"]
+        assert wb.sheetnames == ["Requirements", "Traceability", "Cognitive coverage", "Scenarios", "Vehicle signals", "Open items", "Run log"]
         docx = client.get("/api/export/word")
         text = "\n".join(p.text for p in Document(BytesIO(docx.content)).paragraphs)
-        assert "6. Cognitive companion" in text and "target CL5, specified CL5" in text
+        assert "7. Cognitive companion" in text and "4. Vehicle context" in text and "target CL5, specified CL5" in text
 
 
 def test_agents_run_through_the_model_loop_with_a_trace():

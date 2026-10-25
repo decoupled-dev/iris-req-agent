@@ -1,6 +1,6 @@
 # Agents
 
-Nine agents maintain the SEW1 baseline. Each one returns findings and, where its role allows, proposed requirements. The compliance gate returns findings only.
+Ten agents maintain the SEW1 baseline. Each one returns findings and, where its role allows, proposed requirements. The compliance gate returns findings only.
 
 Each local agent is defined by a system prompt (`backend/app/agents/prompts/`), a tool set, and its dependencies. The agent loop in [11-agent-runtime.md](11-agent-runtime.md) drives a model provider through tool calls until the model calls `submit_result`; that call carries the shared result below. The **Reads** line of each agent names what its tools expose.
 
@@ -27,6 +27,7 @@ flowchart TB
   oem[OemFeatureResearch]
   voc[CustomerExpectations]
   cog[CompanionCognition]
+  veh[VehicleContext]
   synth[RequirementsSynthesis]
   gdpr[GdprPrivacy]
   dist[DriverDistraction]
@@ -36,6 +37,7 @@ flowchart TB
   oem --> synth
   voc --> synth
   cog --> synth
+  veh --> synth
   synth --> gdpr
   synth --> dist
   synth --> safe
@@ -46,8 +48,8 @@ flowchart TB
 
 | Stage | Agents | Starts when |
 | --- | --- | --- |
-| Research | Google assistant reference, OEM feature research, Customer expectations, Companion cognition | The engineer starts them, together or alone |
-| Synthesis | Requirements synthesis | All four research agents have a succeeded run, or the engineer reruns synthesis against the latest saved research |
+| Research | Google assistant reference, OEM feature research, Customer expectations, Companion cognition, Vehicle context | The engineer starts them, together or alone |
+| Synthesis | Requirements synthesis | All five research agents have a succeeded run, or the engineer reruns synthesis against the latest saved research |
 | Assurance | GDPR and privacy, Driver distraction, Safety and cybersecurity | Synthesis has a succeeded run |
 | Gate | Compliance gate | The three assurance agents have a succeeded run |
 
@@ -91,11 +93,25 @@ Cover at least: Mercedes-Benz MBUX Voice Assistant, BMW Intelligent Personal Ass
 - `SYS-COG` proposals for each uncovered capability at or below the target level, each carrying its **Cognitive capability** ID, a verification method, and acceptance criteria drawn from the verification measures
 - CL0–CL4 proposals as Must; CL5 proposals as Should, with the companion principle they depend on in the rationale
 
-## 5. Requirements synthesis
+## 5. Vehicle context
 
-**Purpose.** Merge the four research outputs into one coherent set of `shall` statements.
+**Purpose.** Specify how the companion reacts to the vehicle and cabin: which signals it reads, which triggers it responds to, and what it says or does.
 
-**Reads.** Latest findings and proposals from agents 1–4, plus the current register so baselined IDs are respected.
+**Reads.** The vehicle signal catalog and the `vehicle_scenarios` pack ([12-vehicle-context.md](12-vehicle-context.md)), and the register.
+
+**Writes.**
+
+- One finding per scenario theme, and one per optional-fitment signal the scenarios depend on
+- Behavioural proposals with a one-line `shall` statement and a GIVEN / WHEN / THEN `scenario`, each validated with `check_scenarios` before submission
+- SYS-COG by default; SYS-SAFE (with preliminary ASIL) for safety functions such as the rear-occupant reminder; SYS-DIST for distraction constraints
+
+Metrics: `scenarios`, `signals_used`, `triggers_covered`.
+
+## 6. Requirements synthesis
+
+**Purpose.** Merge the five research outputs into one coherent set of `shall` statements.
+
+**Reads.** Latest findings and proposals from agents 1–5, plus the current register so baselined IDs are respected.
 
 **Writes.** Proposals with statement, rationale, source, category, priority, verification method, and acceptance criteria.
 
@@ -106,8 +122,9 @@ Cover at least: Mercedes-Benz MBUX Voice Assistant, BMW Intelligent Personal Ass
 - Do not invent a second requirement for the same behavior
 - Deduplicate overlapping research proposals and keep every source on the surviving item
 - Keep the **Cognitive capability** ID; when two proposals for the same behaviour cite different capabilities, keep both IDs
+- Keep the GIVEN / WHEN / THEN `scenario` unchanged
 
-## 6. GDPR and privacy
+## 7. GDPR and privacy
 
 **Purpose.** Add or tighten requirements for in-cabin voice data.
 
@@ -117,7 +134,7 @@ Cover at least: Mercedes-Benz MBUX Voice Assistant, BMW Intelligent Personal Ass
 
 For companion behaviour it also covers personal and episodic memory (COG-08, COG-09), learning (COG-19), and opt-in affect awareness (COG-16), including the EU AI Act transparency and emotion-recognition themes. Those proposals stay In Review until legal confirmation. The proposal remains subject to privacy review.
 
-## 7. Driver distraction
+## 8. Driver distraction
 
 **Purpose.** Constrain interaction so the assistant does not demand visual-manual attention while driving.
 
@@ -125,7 +142,7 @@ For companion behaviour it also covers personal and episodic memory (COG-08, COG
 
 **Writes.** `SYS-DIST` and related `SYS-HMI` proposals: dialogue length, lockouts above a speed threshold, eyes-off-road, and confirmation of high-impact actions by voice. It also proposes workload-aware timing for proactive speech (COG-13) and limits on open conversation and fatigue prompts while driving (COG-16, COG-17). References include ISO 15005 themes and NHTSA visual-manual distraction themes.
 
-## 8. Safety and cybersecurity
+## 9. Safety and cybersecurity
 
 **Purpose.** Classify hazard candidates and add safety and security requirements.
 
@@ -141,7 +158,7 @@ For companion behaviour it also covers personal and episodic memory (COG-08, COG
 
 Most dialogue, media, and navigation behaviors are proposed as QM. Hazard candidates that need an explicit preliminary class include emergency call, child-lock and window commands, and any voice path that could engage or disengage driver assistance.
 
-## 9. Compliance gate
+## 10. Compliance gate
 
 **Purpose.** Check the register and the open proposals before export.
 
@@ -161,6 +178,8 @@ Checks:
 - Cognitive coverage: every capability at or below the target level is covered under the rule in [09-cognitive-companion.md](09-cognitive-companion.md); one finding per uncovered capability
 - A COG-12 (proactive) item with no `SYS-DIST` item citing COG-13
 - A CL5 (`COG-15`–`COG-17`, `COG-09`) item in Baselined without a privacy reviewer on its change note
+- Every scenario against the rules in [12-vehicle-context.md](12-vehicle-context.md#writing-behavioural-requirements): unknown signals, high-impact without confirmation (critical), prohibited functions not refused (critical), proactive speech while moving without a workload condition
+- Behavioural requirements for COG-01, 02, 12, 13, 14 without a scenario, and catalog triggers with no behaviour (minor)
 
 The gate reports the **specified cognitive level** in `metrics`.
 

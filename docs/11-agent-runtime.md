@@ -35,6 +35,8 @@ The runtime adds `provider`, `model`, `turns`, `input_tokens`, `output_tokens`, 
 | `list_requirements(category?, state?)` | Current register items | All except gate |
 | `list_open_proposals()` | Inbox titles and IDs | Synthesis, assurance |
 | `get_dependency_output(agent_id)` | Findings and proposals of an upstream run | Synthesis, assurance |
+| `get_vehicle_signals(domain?)` | Signal catalog, triggers, response types | Vehicle context |
+| `check_scenarios(scenarios)` | Rule check of GIVEN / WHEN / THEN drafts | Vehicle context |
 | `run_compliance_checks()` | Deterministic rule results with severity | Gate |
 | `submit_result(summary, findings, proposals, metrics?)` | Ends the run | All |
 

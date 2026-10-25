@@ -34,6 +34,43 @@ VERIFICATION_METHODS = ("Test", "Analysis", "Inspection", "Demonstration")
 ASIL_NOTE = "to be confirmed by the safety manager"
 
 
+class Condition(BaseModel):
+    """GIVEN clause: a catalog signal compared with a value or, as "@alias", another signal."""
+
+    signal: str
+    op: str  # == != < > <= >= in known
+    value: Any = None
+    note: str = ""
+
+
+class When(BaseModel):
+    trigger: str
+    intent: str = ""
+    example: str = ""
+
+
+class Response(BaseModel):
+    """THEN clause. `target` is a signal alias or family; `zone` is a zone, "speaker", or "all"."""
+
+    type: str  # ACT CONFIRM_THEN_ACT ASK SUGGEST INFORM DEFER REFUSE
+    target: str = ""
+    zone: str = ""
+    value: Any = None
+    say: str = ""
+    note: str = ""
+
+
+class Scenario(BaseModel):
+    """Behavioural specification: GIVEN conditions, WHEN one trigger, THEN the companion's responses.
+
+    See docs/12-vehicle-context.md.
+    """
+
+    given: list[Condition] = Field(default_factory=list)
+    when: When
+    then: list[Response]
+
+
 class Finding(BaseModel):
     id: str
     title: str
@@ -58,6 +95,7 @@ class Proposal(BaseModel):
     standard_references: list[str] = Field(default_factory=list)
     verification_method: str = "Test"
     acceptance_criteria: str = ""
+    scenario: Scenario | None = None
     change_note: str = "Initial proposal"
 
     def finding_ids(self) -> list[str]:
@@ -89,6 +127,7 @@ class Requirement(BaseModel):
     standard_references: list[str] = Field(default_factory=list)
     verification_method: str = ""
     acceptance_criteria: str = ""
+    scenario: Scenario | None = None
     change_note: str = "Initial version"
     updated_at: str = ""
     updated_by: str = ""

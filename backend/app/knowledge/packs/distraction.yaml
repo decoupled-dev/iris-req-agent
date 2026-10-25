@@ -36,5 +36,12 @@ entries:
       rationale: Road-first companion principle.
       verification_method: Test
       acceptance_criteria: During high-workload segments, open conversation pauses within one utterance.
+      scenario:
+        given:
+          - {signal: driver_workload, op: "==", value: high}
+          - {signal: nav_guidance_active, op: "==", value: true}
+        when: {trigger: UTTERANCE, intent: open_conversation, example: "Tell me more about that castle"}
+        then:
+          - {type: DEFER, say: "Let's pick that up after this junction.", note: resumes only when the occupant asks again}
       cognitive_capability: [COG-13, COG-17]
       standard_references: [ISO 15005]

@@ -17,8 +17,8 @@ Status on each card is idle, queued, running, succeeded, failed, or cancelled. T
 
 ## Full cycle
 
-1. Queue the four research agents and run them in parallel.
-2. When all four have succeeded, queue synthesis.
+1. Queue the five research agents and run them in parallel.
+2. When all five have succeeded, queue synthesis.
 3. When synthesis has succeeded, queue GDPR, driver distraction, and safety and cybersecurity in parallel.
 4. When those three have succeeded, queue the compliance gate. The gate reports the specified cognitive level against the target.
 5. Leave every synthesis and assurance proposal in the inbox. Do not baseline them automatically. Research candidates stay on their runs.

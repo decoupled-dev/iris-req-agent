@@ -29,4 +29,6 @@ def runtime() -> dict[str, Any]:
 
 
 def agent_config(agent_id: str) -> dict[str, Any]:
+    if os.environ.get("SEW1_FORCE_LOCAL") == "1":
+        return {"mode": "local"}
     return load().get("agents", {}).get(agent_id) or {"mode": "local"}

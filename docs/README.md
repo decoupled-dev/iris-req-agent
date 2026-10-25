@@ -15,5 +15,6 @@ Specification of the in-car voice assistant requirements workbench. The target p
 | [09-cognitive-companion.md](09-cognitive-companion.md) | Cognitive levels, capability catalog, companion principles, coverage rule |
 | [10-plan.md](10-plan.md) | Specification releases and workbench milestones |
 | [11-agent-runtime.md](11-agent-runtime.md) | Agent loop, tools, trace events, simulated provider, swapping in a real model |
+| [12-vehicle-context.md](12-vehicle-context.md) | Vehicle signal catalog, triggers, responses, GIVEN / WHEN / THEN behaviour |
 
 Start with [01-scope.md](01-scope.md). The repository [README](../README.md) is the short map.

@@ -79,9 +79,10 @@ Live forum scraping is not part of the first implementation. The customer-expect
 Configuration lives in `config/agents.yaml`: the project block (name, deployment assumption, target cognitive level) and one entry per agent:
 
 - `mode: local` runs the in-process agent
-- `mode: remote` sends the run to `endpoint`
+- `mode: remote` sends the run to an HTTPS `endpoint`
+- `mode: bedrock` invokes an Amazon Bedrock AgentCore harness; its tools still run in the workbench
 
-No cloud account is required while every agent is `local`.
+A cloud account is required only for agents whose mode is `remote` or `bedrock`.
 
 ## Repository layout
 

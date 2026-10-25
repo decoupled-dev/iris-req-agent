@@ -92,6 +92,11 @@ On success:
       "preliminary_asil": "",
       "asil_note": "",
       "cognitive_capability": ["COG-01"],
+      "scenario": {
+        "given": [{"signal": "seat_occupied_rear_left", "op": "==", "value": true}],
+        "when": {"trigger": "UTTERANCE", "intent": "climate.warmer", "example": "Make it warmer back here"},
+        "then": [{"type": "ACT", "target": "setpoint_rear", "value": "+2 °C", "say": "Warming up the back."}]
+      },
       "standard_references": [],
       "verification_method": "Test",
       "acceptance_criteria": "A rear-seat climate command does not change the driver temperature setpoint.",
@@ -101,9 +106,9 @@ On success:
 }
 ```
 
-The compliance gate sends `"proposals": []` and adds `"metrics": {"specified_cognitive_level": "CL2", "uncovered": ["COG-08", …]}`.
+`scenario` is optional and follows [12-vehicle-context.md](12-vehicle-context.md); omit it for non-behavioural requirements. The compliance gate sends `"proposals": []` and adds `"metrics": {"specified_cognitive_level": "CL2", "uncovered": ["COG-08", …]}`.
 
-Agent IDs: `google_assistant_reference`, `oem_feature_research`, `customer_expectations`, `companion_cognition`, `requirements_synthesis`, `gdpr_privacy`, `driver_distraction`, `safety_cybersecurity`, `compliance_gate`.
+Agent IDs: `google_assistant_reference`, `oem_feature_research`, `customer_expectations`, `companion_cognition`, `vehicle_context`, `requirements_synthesis`, `gdpr_privacy`, `driver_distraction`, `safety_cybersecurity`, `compliance_gate`.
 
 On failure:
 
@@ -130,6 +135,20 @@ The worker stops if it still can, and the next poll returns `"status": "cancelle
 ## Local agents
 
 The in-process agent returns the same success object. The orchestrator writes it into the run log. The UI cannot tell from the proposal whether the author was local or remote; the run log records `mode`.
+
+## Bedrock AgentCore
+
+`mode: bedrock` calls `InvokeHarness` on an AgentCore harness. The workbench sends the agent’s system prompt and tools as inline functions, runs those tools locally, and returns the results on the same session until the model calls `submit_result`. The harness does not write the register.
+
+```yaml
+companion_cognition:
+  mode: bedrock
+  harness_arn: arn:aws:bedrock-agentcore:ap-southeast-2:825457798894:harness/CompanionCognition-6M6lAgDhf6
+  region: ap-southeast-2
+  qualifier: DEFAULT
+```
+
+`qualifier` selects the harness endpoint. `DEFAULT` is the active endpoint. Credentials are the standard AWS chain for that account and Region. The caller needs `bedrock-agentcore:InvokeHarness` on the harness.
 
 ## Models in a worker
 
