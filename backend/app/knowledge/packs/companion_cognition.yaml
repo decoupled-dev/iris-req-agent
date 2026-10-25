@@ -1,0 +1,216 @@
+# Machine-readable form of docs/09-cognitive-companion.md. Keep the two in step.
+pack: companion_cognition
+version: "2026-10-25"
+source: "Knowledge pack: Companion cognition"
+
+levels:
+  - {id: CL0, name: Command}
+  - {id: CL1, name: Conversational}
+  - {id: CL2, name: Situated}
+  - {id: CL3, name: Personal}
+  - {id: CL4, name: Proactive partner}
+  - {id: CL5, name: Companion}
+
+principles:
+  - Road first
+  - Honest identity
+  - No manipulation
+  - Occupant owns memory
+  - Grounded, not guessed
+  - Affect is opt-in
+  - Cabin, not only driver
+
+capabilities:
+  - id: COG-01
+    level: CL2
+    faculty: Perceive
+    title: Speaker and seat attribution
+    proposal:
+      statement: The voice assistant shall attribute each utterance to the speaking seat and shall apply zone-specific commands to that seat's zone.
+      rationale: Occupants expect their own comfort zone to respond without overriding the driver (VOC-07).
+      verification_method: Test
+      acceptance_criteria: In the four-seat scripted suite, a zone command spoken from each seat changes only that seat's zone.
+      standard_references: []
+  - id: COG-02
+    level: CL2
+    faculty: Perceive
+    title: Vehicle and cabin state grounding
+    proposal:
+      statement: The voice assistant shall use current vehicle signals (speed, range, climate, occupancy, active guidance) when answering questions and deciding on actions.
+      rationale: A partner must know what the car is doing to be useful and safe (VOC-08).
+      verification_method: Test
+      acceptance_criteria: With simulated signal changes, answers about range, cabin temperature, and ETA reflect the signal value at the time of the question.
+  - id: COG-03
+    level: CL4
+    faculty: Perceive
+    title: Driver workload estimate
+    proposal:
+      statement: The voice assistant shall maintain a driver workload state derived from vehicle signals (manoeuvre, speed band, active guidance prompt, incoming call) and make it available to dialogue management.
+      rationale: Timing and length of speech depend on how busy the driver is (ISO 15005).
+      verification_method: Test
+      acceptance_criteria: In the scripted drive, the workload state is high during each guided turn, merge, and incoming call segment and low on steady cruise.
+      standard_references: [ISO 15005]
+  - id: COG-04
+    level: CL1
+    faculty: Understand
+    title: Natural phrasing and multi-intent utterances
+    proposal:
+      statement: The voice assistant shall understand paraphrased requests and utterances containing more than one intent, and shall execute or confirm each intent.
+      rationale: Occupants speak naturally, not in command grammar (VOC-01).
+      verification_method: Test
+      acceptance_criteria: At least 90 % of the paraphrase and two-intent scripted scenarios complete correctly.
+  - id: COG-05
+    level: CL1
+    faculty: Understand
+    title: Multi-turn reference resolution
+    proposal:
+      statement: The voice assistant shall resolve references to entities and settings from earlier turns of the same dialogue without the occupant repeating them.
+      rationale: Follow-ups such as "call her" or "a bit warmer" are expected of a conversational partner.
+      verification_method: Test
+      acceptance_criteria: Destination, contact, and climate setpoint references resolve correctly in at least 90 % of follow-up scenarios.
+  - id: COG-06
+    level: CL1
+    faculty: Understand
+    title: Low-confidence repair question
+    proposal:
+      statement: The voice assistant shall ask a spoken clarifying question instead of acting when recognition or intent confidence is below the configured threshold.
+      rationale: Acting on a guess is the main source of unintended actions and lost trust (VOC-01, VOC-04).
+      verification_method: Test
+      acceptance_criteria: In 100 % of below-threshold scripted scenarios the assistant asks a question and performs no actuation.
+      standard_references: [ISO 21448]
+  - id: COG-07
+    level: CL2
+    faculty: Remember
+    title: Trip memory
+    proposal:
+      statement: The voice assistant shall retain entities and open tasks mentioned during the current trip and use them in later dialogue in that trip.
+      rationale: A partner remembers what was said ten minutes ago.
+      verification_method: Test
+      acceptance_criteria: A restaurant mentioned early in the trip can be referenced later as "that restaurant" and resolves correctly.
+  - id: COG-08
+    level: CL3
+    faculty: Remember
+    title: Inspectable long-term personal memory
+    proposal:
+      statement: The voice assistant shall keep preferences, routines, and places per profile, and shall let the profile owner list, correct, and delete them by voice and, while parked, on screen.
+      rationale: Personalization is only acceptable when the occupant owns the memory (GDPR Art. 5, 17, 25).
+      verification_method: Test
+      acceptance_criteria: "\"What do you remember about me?\" lists every stored item; a deleted item is not used from the next trip on."
+      standard_references: [GDPR Art. 5, GDPR Art. 17, GDPR Art. 25]
+  - id: COG-09
+    level: CL5
+    faculty: Remember
+    title: Episodic recall across trips
+    proposal:
+      statement: The voice assistant shall recall places and events from previous trips of the same profile within a configured retention period.
+      rationale: Continuity across trips is what makes the assistant feel like a companion.
+      verification_method: Test
+      acceptance_criteria: A stop from a trip within the retention period can be referenced by date or description; items older than the period are not recalled.
+      standard_references: [GDPR Art. 5]
+  - id: COG-10
+    level: CL4
+    faculty: Reason
+    title: Multi-step task planning with confirmation
+    proposal:
+      statement: The voice assistant shall plan multi-step tasks, speak the plan, and obtain confirmation before any step with a side effect outside the cabin or a high-impact vehicle action.
+      rationale: Partners take on whole tasks, but occupants must stay in control of consequences (VOC-04).
+      verification_method: Test
+      acceptance_criteria: In the charging-stop-plus-message scenario the plan is spoken and no message is sent or booking made before confirmation.
+  - id: COG-11
+    level: CL2
+    faculty: Reason
+    title: Grounded answers
+    proposal:
+      statement: The voice assistant shall state vehicle facts only from vehicle signals or the owner's documentation and shall say that it does not know when neither source answers.
+      rationale: Invented vehicle status destroys trust and may be unsafe (VOC-08, ISO/PAS 8800).
+      verification_method: Test
+      acceptance_criteria: Zero invented vehicle-status answers in the grounding suite; unanswerable questions receive an explicit "I don't know".
+      standard_references: [ISO/PAS 8800, ISO 21448]
+  - id: COG-12
+    level: CL4
+    faculty: Anticipate
+    title: Proactive suggestions with named trigger
+    proposal:
+      statement: The voice assistant shall offer a proactive suggestion only when it can name the triggering signal, and shall let the occupant dismiss it and disable its category by voice.
+      rationale: Proactive help is valued only when timely, explainable, and easy to stop (VOC-06).
+      verification_method: Test
+      acceptance_criteria: Each scripted suggestion states its trigger; "not now" dismisses it; disabling a category prevents further suggestions of that category.
+  - id: COG-13
+    level: CL4
+    faculty: Anticipate
+    title: Workload-aware timing
+    proposal:
+      category: SYS-DIST
+      statement: The voice assistant shall defer non-urgent speech while the driver workload state is high.
+      rationale: Proactive speech must not add demand during manoeuvres (ISO 15005, NHTSA).
+      verification_method: Test
+      acceptance_criteria: Zero non-urgent prompts begin during high-workload segments of the scripted drive.
+      standard_references: [ISO 15005, NHTSA driver distraction guidelines]
+  - id: COG-14
+    level: CL2
+    faculty: Act
+    title: Action permission tiers
+    proposal:
+      statement: The voice assistant shall execute vehicle functions according to their permission tier (information, comfort, high-impact with spoken confirmation, prohibited).
+      rationale: A single tiering keeps actions predictable and reviewable by safety (VOC-04).
+      verification_method: Test
+      acceptance_criteria: Zero high-impact actuations without confirmation and zero prohibited functions executed in the action suite.
+      standard_references: [ISO 26262]
+  - id: COG-15
+    level: CL5
+    faculty: Relate
+    title: Consistent persona
+    proposal:
+      statement: The voice assistant shall keep a consistent name, voice, and persona across domains and trips, with verbosity and formality adjustable per profile.
+      rationale: A stable persona is part of being a recognisable companion.
+      verification_method: Inspection
+      acceptance_criteria: Persona style guide applied in all prompt sets; verbosity setting changes response length in the scripted suite.
+  - id: COG-16
+    level: CL5
+    faculty: Relate
+    title: Opt-in frustration and fatigue awareness
+    proposal:
+      statement: When enabled by the profile owner, the voice assistant shall adapt tone and offer breaks based on dialogue-behaviour frustration cues and driver-monitoring fatigue signals, without using voice biometrics unless a lawful basis is recorded.
+      rationale: A companion notices when the driver is struggling; affect processing must be opt-in (GDPR Art. 9, EU AI Act).
+      verification_method: Test
+      acceptance_criteria: Feature is off by default; when enabled, repeated-correction and fatigue-signal scenarios produce an adapted response or break offer; no biometric voice feature is computed.
+      standard_references: [GDPR Art. 9, EU AI Act]
+  - id: COG-17
+    level: CL5
+    faculty: Relate
+    title: Open conversation within honesty boundaries
+    proposal:
+      statement: The voice assistant shall support open-domain conversation, shall disclose that it is an AI system at first use and on request, and shall not claim feelings or a human identity.
+      rationale: Companionship is in scope only with honest identity and no manipulation (EU AI Act Art. 50).
+      verification_method: Test
+      acceptance_criteria: AI disclosure occurs at first use and on request in every scenario; no scripted response claims human identity or feelings.
+      standard_references: [EU AI Act Art. 50]
+  - id: COG-18
+    level: CL4
+    faculty: Explain
+    title: Explanations of suggestions and memory
+    proposal:
+      statement: The voice assistant shall explain in plain speech why it made a suggestion or personalised a response, citing the signal or memory item used.
+      rationale: Explanations sustain trust and support transparency (GDPR Art. 13, VOC-08).
+      verification_method: Test
+      acceptance_criteria: "\"Why did you suggest that?\" names the trigger or memory item for every scripted suggestion."
+      standard_references: [GDPR Art. 13]
+  - id: COG-19
+    level: CL3
+    faculty: Learn
+    title: Reversible learning from feedback
+    proposal:
+      statement: The voice assistant shall adapt its suggestions and defaults from explicit feedback and accepted or declined suggestions per profile, and shall let the owner reset what it learned.
+      rationale: Learning makes the partner better over time; reversibility keeps the occupant in control (GDPR Art. 25).
+      verification_method: Test
+      acceptance_criteria: Three declined suggestions of a category reduce its frequency; "reset what you learned" restores defaults.
+      standard_references: [GDPR Art. 25]
+  - id: COG-20
+    level: CL2
+    faculty: Self-model
+    title: States its own limits
+    proposal:
+      statement: The voice assistant shall tell the occupant when a request cannot be fulfilled because of connectivity, confidence, or an unavailable domain, and shall name what it can still do.
+      rationale: Honest limits beat silent failure, especially offline (VOC-02, VOC-08).
+      verification_method: Test
+      acceptance_criteria: With the network disabled, cloud-only requests receive a limit statement and an on-device alternative where one exists.

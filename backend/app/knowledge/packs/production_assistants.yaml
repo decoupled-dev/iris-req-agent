@@ -1,0 +1,44 @@
+# docs/08-knowledge-baseline.md, "Production assistants"
+pack: production_assistants
+version: "2026-10-25"
+source: "Knowledge pack: Production assistants"
+entries:
+  - key: oem_mbux_seat
+    title: MBUX seat-aware commands
+    finding: Mercedes-Benz MBUX applies comfort commands to the speaking seat. Decision — match.
+    proposal:
+      category: SYS-FUNC
+      title: Seat-aware comfort commands
+      statement: The voice assistant shall apply comfort commands to the zone of the speaking seat.
+      rationale: Match MBUX seat-aware behaviour.
+      verification_method: Test
+      acceptance_criteria: A rear-seat climate command does not change the driver temperature setpoint.
+      cognitive_capability: [COG-01]
+  - key: oem_mbux_followup
+    title: MBUX follow-up window
+    finding: MBUX accepts follow-up questions without the wake word in a short window. Decision — match.
+    proposal:
+      category: SYS-HMI
+      title: Follow-up without wake word
+      statement: The voice assistant shall accept a follow-up utterance without the wake word within a configured window after its response.
+      rationale: Match MBUX conversational follow-up.
+      verification_method: Test
+      acceptance_criteria: A follow-up within the window is processed; one after the window requires the wake word.
+      cognitive_capability: [COG-05]
+  - key: oem_bmw_habits
+    title: BMW learned habits
+    finding: BMW Intelligent Personal Assistant learns climate and navigation habits per driver profile. Decision — match with inspectable memory.
+    proposal:
+      category: SYS-COG
+      title: Learned routines per profile
+      statement: The voice assistant shall learn recurring climate and navigation routines per profile and offer them as suggestions.
+      rationale: Match BMW learned habits, constrained by occupant-owned memory.
+      verification_method: Test
+      acceptance_criteria: After three repeated morning trips, the routine is offered and can be declined.
+      cognitive_capability: [COG-08, COG-19]
+  - key: oem_tesla_cmds
+    title: Tesla command breadth
+    finding: Tesla emphasises a large, growing set of reliable vehicle-control phrases with limited small talk. Decision — match reliability; exceed on conversation.
+  - key: oem_hyundai_calendar
+    title: Hyundai and Kia connected calendar
+    finding: Linked calendar enables departure reminders when signed in. Decision — match, limit while driving.

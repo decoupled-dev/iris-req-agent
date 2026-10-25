@@ -1,0 +1,48 @@
+# docs/08-knowledge-baseline.md, "Google assistant reference"
+pack: google_assistant_reference
+version: "2026-10-25"
+source: "Knowledge pack: Google assistant reference"
+entries:
+  - key: gar_nav
+    title: Voice navigation
+    finding: Destination, added stops, remaining time, and traffic can be handled by voice.
+    proposal:
+      category: SYS-FUNC
+      title: Navigation dialogue
+      statement: The voice assistant shall set a destination, add a stop, and report remaining time and traffic by voice.
+      rationale: Reference driving-mode capability (Google assistant, reference only).
+      verification_method: Test
+      acceptance_criteria: Scripted navigation tasks complete by voice only.
+      cognitive_capability: [COG-04]
+  - key: gar_media
+    title: Voice media control
+    finding: Play, pause, skip, and search of music and radio by voice.
+    proposal:
+      category: SYS-FUNC
+      title: Media control
+      statement: The voice assistant shall play, pause, skip, and search music and radio sources by voice.
+      rationale: Reference driving-mode capability (Google assistant, reference only).
+      verification_method: Test
+      acceptance_criteria: Each media command in the scripted suite produces the requested playback state.
+  - key: gar_msg
+    title: Calls and message read-out
+    finding: Calls to contacts, incoming messages read aloud, and voice replies.
+    proposal:
+      category: SYS-FUNC
+      title: Calls and messages by voice
+      statement: The voice assistant shall place calls to contacts, read incoming messages aloud, and send replies dictated by voice.
+      rationale: Reference capability; reduces visual-manual phone use.
+      verification_method: Test
+      acceptance_criteria: Call, read-out, and reply scenarios complete without touch input.
+      standard_references: [NHTSA driver distraction guidelines]
+  - key: gar_offline
+    title: Offline limits
+    finding: Many cloud features are unavailable without connectivity; on-device commands should be named.
+    proposal:
+      category: SYS-PERF
+      title: Degraded mode command set
+      statement: The voice assistant shall execute climate, media, and phone commands on-device when cloud connectivity is unavailable.
+      rationale: Owners expect essential commands offline (VOC-02).
+      verification_method: Test
+      acceptance_criteria: With the network disabled, the on-device command list executes successfully.
+      cognitive_capability: [COG-20]

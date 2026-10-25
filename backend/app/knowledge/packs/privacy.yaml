@@ -1,0 +1,64 @@
+# docs/08-knowledge-baseline.md, "Privacy themes"
+pack: privacy
+version: "2026-10-25"
+source: "Knowledge pack: Privacy themes"
+review_capabilities: [COG-08, COG-09, COG-16, COG-19]
+entries:
+  - key: priv_minimization
+    title: Data minimization
+    finding: Raw audio should not be kept when a transcript or command result is enough (GDPR Art. 5).
+    proposal:
+      category: SYS-PRIV
+      title: Raw audio minimization
+      statement: The voice assistant shall discard raw audio after the task completes unless the occupant has opted into an improvement purpose.
+      rationale: GDPR Art. 5 data minimization theme; subject to privacy review.
+      verification_method: Inspection
+      acceptance_criteria: Storage inspection after the scripted suite finds no raw audio for non-opted-in profiles.
+      standard_references: [GDPR Art. 5]
+  - key: priv_indication
+    title: Recording indication and mute
+    finding: Capture indication and a microphone mute are default cabin controls (GDPR Art. 25, VOC-03).
+    proposal:
+      category: SYS-PRIV
+      title: Capture indication and hard mute
+      statement: The voice assistant shall indicate audio capture and shall provide a mute that disconnects the microphone path.
+      rationale: GDPR Art. 25 privacy by design; VOC-03.
+      verification_method: Test
+      acceptance_criteria: While muted, no audio reaches the assistant pipeline.
+      standard_references: [GDPR Art. 25]
+  - key: priv_memory
+    title: Personal memory rights
+    finding: Long-term and episodic memory must be listable, correctable, deletable, and retention-bounded (GDPR Art. 15, 17).
+    proposal:
+      category: SYS-PRIV
+      title: Memory retention bound
+      statement: The voice assistant shall delete episodic memory items older than the configured retention period and shall honour deletion requests before the next trip.
+      rationale: GDPR Art. 5 and 17 themes for COG-08 and COG-09; subject to privacy review.
+      verification_method: Test
+      acceptance_criteria: Items past retention and deleted items are absent from recall and storage.
+      cognitive_capability: [COG-08, COG-09]
+      standard_references: [GDPR Art. 5, GDPR Art. 17]
+  - key: priv_ai_disclosure
+    title: AI disclosure
+    finding: Occupants are told they interact with an AI system (EU AI Act Art. 50).
+    proposal:
+      category: SYS-PRIV
+      title: AI system disclosure
+      statement: The voice assistant shall inform each new profile, and any occupant who asks, that it is an AI system.
+      rationale: EU AI Act Art. 50 transparency theme; subject to legal review.
+      verification_method: Test
+      acceptance_criteria: Disclosure occurs at profile creation and on request.
+      cognitive_capability: [COG-17]
+      standard_references: [EU AI Act Art. 50]
+  - key: priv_affect
+    title: Emotion inference
+    finding: Affect awareness may be emotion recognition under the EU AI Act and special-category processing under GDPR Art. 9; fleet cabins may be workplaces.
+    proposal:
+      category: SYS-PRIV
+      title: Affect awareness opt-in
+      statement: The voice assistant shall keep frustration and fatigue awareness disabled until the profile owner enables it after an explanation, and shall not derive emotion from voice biometrics unless a lawful basis is recorded.
+      rationale: GDPR Art. 9 and EU AI Act emotion-recognition themes for COG-16; to be confirmed by privacy and legal review.
+      verification_method: Inspection
+      acceptance_criteria: Default configuration has the feature off; no biometric voice feature extractor is enabled.
+      cognitive_capability: [COG-16]
+      standard_references: [GDPR Art. 9, EU AI Act]

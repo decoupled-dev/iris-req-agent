@@ -1,0 +1,40 @@
+# docs/08-knowledge-baseline.md, "Driver distraction themes"
+pack: distraction
+version: "2026-10-25"
+source: "Knowledge pack: Driver distraction themes"
+review_capabilities: [COG-12, COG-13, COG-16, COG-17]
+entries:
+  - key: dist_eyes
+    title: Eyes off road
+    finding: A voice task should not require a glance at a list or touch confirmation while driving (NHTSA).
+    proposal:
+      category: SYS-DIST
+      title: Voice-only task completion
+      statement: The voice assistant shall complete a driving-task dialogue by voice and shall not require the driver to look at a screen to finish that task.
+      rationale: NHTSA visual-manual distraction theme.
+      verification_method: Test
+      acceptance_criteria: Above the lockout speed, scripted tasks finish by voice and no touch list is presented to the driver.
+      standard_references: [NHTSA driver distraction guidelines]
+  - key: dist_prompts
+    title: Short, interruptible prompts
+    finding: Spoken prompts are short, interruptible, and paced (ISO 15005).
+    proposal:
+      category: SYS-HMI
+      title: Interruptible prompts
+      statement: The voice assistant shall stop speaking within 300 ms of driver barge-in and shall keep driving-time prompts within the configured length limit.
+      rationale: ISO 15005 dialogue management theme.
+      verification_method: Test
+      acceptance_criteria: Barge-in stops playback within 300 ms in 95 % of trials; no driving prompt exceeds the limit.
+      standard_references: [ISO 15005]
+  - key: dist_conversation
+    title: Open conversation while driving
+    finding: Open conversation and fatigue prompts must yield to driving demand.
+    proposal:
+      category: SYS-DIST
+      title: Conversation yields to driving
+      statement: The voice assistant shall pause open conversation when the driver workload state becomes high and resume only when invited.
+      rationale: Road-first companion principle.
+      verification_method: Test
+      acceptance_criteria: During high-workload segments, open conversation pauses within one utterance.
+      cognitive_capability: [COG-13, COG-17]
+      standard_references: [ISO 15005]

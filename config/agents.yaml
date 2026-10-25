@@ -1,0 +1,46 @@
+# Workbench configuration. See docs/02-architecture.md and docs/07-remote-agents.md.
+project:
+  name: In-car voice assistant
+  deployment_assumption: AAOS or QNX, undecided
+  # CL0..CL5, docs/09-cognitive-companion.md
+  target_cognitive_level: CL5
+
+# Model runtime. Agents are provider-neutral; see docs/11-agent-runtime.md.
+runtime:
+  # simulated | anthropic | vertex | gemini | openai_compat
+  provider: simulated
+  model: sim-companion-1
+  max_turns: 12
+  simulated:
+    latency_ms: [450, 1400]   # per model turn
+    seed: 7
+    failure_rate: 0.0         # raise to rehearse failed runs in the control room
+  # anthropic: {api_key_env: ANTHROPIC_API_KEY}
+  # vertex: {project_id: my-gcp-project, region: europe-west1}
+  # gemini: {api_key_env: GEMINI_API_KEY}
+  # openai_compat: {base_url: http://localhost:8001/v1, api_key_env: OPENAI_API_KEY}
+
+agents:
+  google_assistant_reference:
+    mode: local
+  oem_feature_research:
+    mode: local
+  customer_expectations:
+    mode: local
+  companion_cognition:
+    mode: local
+  requirements_synthesis:
+    mode: local
+  gdpr_privacy:
+    mode: local
+  driver_distraction:
+    mode: local
+  safety_cybersecurity:
+    mode: local
+  compliance_gate:
+    mode: local
+  # Example remote worker:
+  # oem_feature_research:
+  #   mode: remote
+  #   endpoint: https://agent.example.com/v1/agents/oem_feature_research
+  #   auth_env: OEM_AGENT_TOKEN

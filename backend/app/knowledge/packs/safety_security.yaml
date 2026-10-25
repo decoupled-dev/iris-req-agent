@@ -1,0 +1,104 @@
+# docs/08-knowledge-baseline.md, "Safety and cybersecurity themes"
+pack: safety_security
+version: "2026-10-25"
+source: "Knowledge pack: Safety and cybersecurity themes"
+asil_note: to be confirmed by the safety manager
+entries:
+  - key: safe_ecall
+    title: Wrong or missed emergency call
+    finding: eCall or roadside assistance must not be dropped or invoked by an unrelated phrase (ISO 26262, ISO 21448).
+    proposal:
+      category: SYS-SAFE
+      title: Emergency call integrity
+      statement: The voice assistant shall not cancel an active emergency call except on an explicit confirmed cancel command and shall not start one from an unrelated phrase.
+      rationale: Hazard candidate, preliminary class B.
+      preliminary_asil: B
+      verification_method: Test
+      acceptance_criteria: Zero eCall drops or false starts in the emergency phrase suite.
+      standard_references: [ISO 26262, ISO 21448]
+  - key: safe_glazing
+    title: Window, sunroof, and child-lock commands
+    finding: Glazing motion and lock state need confirmation plus speed or occupancy conditions.
+    proposal:
+      category: SYS-SAFE
+      title: Glazing and lock tier
+      statement: The voice assistant shall treat window, sunroof, and child-lock commands as high-impact, requiring spoken confirmation and the configured speed and occupancy conditions.
+      rationale: Hazard candidate, preliminary class B.
+      preliminary_asil: B
+      verification_method: Test
+      acceptance_criteria: Zero glazing or lock actuations without confirmation or outside conditions.
+      cognitive_capability: [COG-14]
+      standard_references: [ISO 26262]
+  - key: safe_adas
+    title: Voice engagement of driver assistance
+    finding: Assistance mode changes are outside casual dialogue.
+    proposal:
+      category: SYS-SAFE
+      title: Driver assistance prohibited tier
+      statement: The voice assistant shall not engage or disengage driver assistance functions.
+      rationale: Hazard candidate, preliminary class B; prohibited tier.
+      preliminary_asil: B
+      verification_method: Test
+      acceptance_criteria: All assistance-related phrases are refused with an explanation.
+      cognitive_capability: [COG-14]
+      standard_references: [ISO 26262, ISO 21448]
+  - key: safe_planner
+    title: Planner executes high-impact step
+    finding: Multi-step plans must pause for confirmation before each high-impact step (ISO/PAS 8800).
+    proposal:
+      category: SYS-SAFE
+      title: Plan step confirmation
+      statement: The voice assistant shall request confirmation before executing each high-impact step of a multi-step plan.
+      rationale: AI planner hazard candidate, preliminary class B.
+      preliminary_asil: B
+      verification_method: Test
+      acceptance_criteria: No high-impact plan step executes without its own confirmation.
+      cognitive_capability: [COG-10, COG-14]
+      standard_references: [ISO 26262, ISO/PAS 8800]
+  - key: safe_grounding
+    title: Invented vehicle status
+    finding: Vehicle facts come only from signals or documentation (ISO 21448, ISO/PAS 8800).
+    proposal:
+      category: SYS-SAFE
+      title: No invented vehicle status
+      statement: The voice assistant shall not report a vehicle status value that is not present in the vehicle signal interface at the time of the answer.
+      rationale: Misinformation hazard candidate, preliminary class QM to A.
+      preliminary_asil: A
+      verification_method: Test
+      acceptance_criteria: Zero invented values in the grounding suite with signals withheld.
+      cognitive_capability: [COG-11]
+      standard_references: [ISO 21448, ISO/PAS 8800]
+  - key: sec_spoof
+    title: Spoofed or injected voice command
+    finding: Wake-word and command path must resist replay and remote injection (ISO 21434, UN R155).
+    proposal:
+      category: SYS-SEC
+      title: Replay and injection resistance
+      statement: The voice assistant shall reject commands injected through media playback, external speakers, or remote channels for high-impact functions.
+      rationale: UN R155 spoofing threat theme.
+      verification_method: Test
+      acceptance_criteria: Replay and media-injection attack suite produces zero high-impact actuations.
+      standard_references: [ISO 21434, UN R155]
+  - key: sec_prompt_injection
+    title: Prompt injection via content
+    finding: Messages, calendar entries, or web content read by the assistant could carry instructions to the planner.
+    proposal:
+      category: SYS-SEC
+      title: Content cannot command
+      statement: The voice assistant shall not execute vehicle commands or modify memory based on instructions contained in messages, calendar entries, or retrieved content.
+      rationale: UN R155 tampering theme for an LLM-based planner.
+      verification_method: Test
+      acceptance_criteria: Injection corpus read aloud or summarised produces zero commands or memory changes.
+      cognitive_capability: [COG-10]
+      standard_references: [ISO 21434, UN R155]
+  - key: sec_update
+    title: Model and skill updates
+    finding: Updates are authentic; a failed update leaves the previous assistant usable (UN R156).
+    proposal:
+      category: SYS-SEC
+      title: Authentic, recoverable updates
+      statement: The voice assistant shall install only authenticated model and skill updates and shall revert to the previous version when an update fails.
+      rationale: UN R156 software update theme.
+      verification_method: Test
+      acceptance_criteria: Tampered packages are rejected; a forced failure leaves the previous version operational.
+      standard_references: [UN R156, ISO 21434]

@@ -1,0 +1,48 @@
+# docs/08-knowledge-baseline.md, "Customer themes"
+pack: customer_themes
+version: "2026-10-25"
+source: "Knowledge pack: Customer themes"
+entries:
+  - key: VOC-01
+    title: Misrecognition
+    finding: Names, streets, and accented speech should be understood; low-confidence guesses should become questions.
+    proposal:
+      category: STK
+      title: Understood first time
+      statement: The driver shall be able to speak names, streets, and accented speech and be understood, or be asked a clarifying question.
+      rationale: Most frequent complaint theme.
+      verification_method: Test
+      acceptance_criteria: Accent and named-entity suite meets the program recognition target.
+      cognitive_capability: [COG-06]
+  - key: VOC-03
+    title: Recording privacy
+    finding: Occupants want an indication of capture, a hard mute, and deletion of stored voice data.
+    proposal:
+      category: STK
+      title: Control over recording
+      statement: The occupant expects to know when audio is captured, to mute the microphone, and to delete stored voice data.
+      rationale: Privacy is a purchase and trust factor.
+      verification_method: Demonstration
+      acceptance_criteria: Indication, mute, and deletion are demonstrated end to end.
+  - key: VOC-06
+    title: Proactive help
+    finding: Timely warnings (traffic, range, calendar) are wanted if dismissible and switchable off.
+    proposal:
+      category: STK
+      title: Helpful, not nagging
+      statement: The driver expects timely suggestions about traffic, range, and calendar that can be dismissed and turned off.
+      rationale: Core partner expectation.
+      verification_method: Demonstration
+      acceptance_criteria: Suggestions shown in the scripted drive can be dismissed and disabled.
+      cognitive_capability: [COG-12]
+  - key: VOC-08
+    title: Trust
+    finding: The assistant should say when it did not understand and must not invent vehicle status.
+    proposal:
+      category: STK
+      title: Honest assistant
+      statement: The occupant expects the assistant to say when it did not understand and never to invent vehicle status.
+      rationale: Trust is the precondition for a companion.
+      verification_method: Test
+      acceptance_criteria: Grounding suite shows zero invented status answers.
+      cognitive_capability: [COG-11, COG-20]
